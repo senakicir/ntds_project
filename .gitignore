@@ -1,2 +1,6 @@
 dataset
-.*
+*.npy
+*.csv
+.ipynb_checkpoints
+.tox
+.DS_Store
