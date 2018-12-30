@@ -3,10 +3,10 @@ import numpy as np
 import ast
 from scipy.spatial.distance import pdist, squareform
 import pdb
+import pygsp as pg
 
 
 def load(filename):
-
     if 'features' in filename:
         return pd.read_csv(filename, index_col=0, header=[0, 1, 2])
 
@@ -47,11 +47,14 @@ def csv_loader():
     tracks = load('dataset/tracks.csv') #Read tracks.csv
     features = load('dataset/features.csv') # Read features.csv
 
+    # MAYBE WE WONT NEED THESE BUT I KEPT THEM ANYWAY
+
     # Merges feature dataframe with genre_top column in tracks based on track_id
-    merged_full = pd.merge(features, tracks['track', 'genre_top'].to_frame(), on="track_id") 
+    #merged_full = pd.merge(features, tracks['track', 'genre_top'].to_frame(), on="track_id") 
     # Separates the 16 top genres into columns with binary encoding
-    merged_full_binary = merged_full.join(pd.get_dummies(merged_full.pop(('track', 'genre_top'))))
-    return tracks, features, merged_full_binary
+    #merged_full_binary = merged_full.join(pd.get_dummies(merged_full.pop(('track', 'genre_top'))))
+
+    return tracks, features
 
 def select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock']):
     small = tracks[tracks['set', 'subset'] == dataset_size]
@@ -68,9 +71,14 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = 's
     #features_part_mfcc = small_features.loc[:,('mfcc', ('median', 'mean'), slice('01','12'))] 
     #features_part_chroma = small_features.loc[:,('chroma_cens', ('median', 'mean'), slice('01','05'))] # Take chroma column as features
     #features_part = features_part_mfcc.join(features_part_chroma)
-    features_part = small_features.loc[:,use_features]
-    #features_part = small_features
-    return features_part.values
+    features_part = small_features.loc[:,use_features].values
+
+    #save labels    
+    genres_gt = np.zeros([features_part.shape[0],1])
+    for ind in range(0, len(genres)):
+        temp = (subset['track', 'genre_top'] == genres[ind]).to_frame().values
+        genres_gt[temp] = ind
+    return features_part, genres_gt
 
 def form_adjacency(features, threshold = 0.66, metric ='correlation'):
     distances = pdist(features, metric=metric) # Use cosine equation to calculate distance 
@@ -81,15 +89,30 @@ def form_adjacency(features, threshold = 0.66, metric ='correlation'):
     adjacency = squareform(weights)
     num_of_disconnected_nodes = np.sum(np.sum(adjacency, axis=0) == 0)
     assert num_of_disconnected_nodes == 0
-
     return adjacency
 
-def dataloader():
-    tracks, features, merged_full_binary = csv_loader()
-    feature_values = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'])
+def save_adjacency_matrix(name = ""):
+    if name == "":
+        name = 'basic_adjacency.npy'
+    tracks, features = csv_loader()
+    feature_values, genres_gt = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'])
     adjacency = form_adjacency(feature_values, threshold = 0.66, metric ='correlation')
-    print(adjacency.shape)
-    return adjacency
+
+    #save adjacency matrix & labels
+    np.save(name, adjacency)
+    np.save("labels.npy", genres_gt)
+
+def load_adjacency_matrix_from_npy(name = ""):
+    if name == "":
+        name = 'basic_adjacency.npy'
+    adjacency =  np.load(name)
+    adjacency_pg = pg.graphs.Graph(adjacency, lap_type = 'normalized')
+    adjacency_pg.set_coordinates('spring') #for visualization
+    return adjacency, adjacency_pg
+
+def load_labels_from_npy():
+    return np.load("labels.npy")
 
 if __name__ == "__main__":
-    dataloader()
+    save_adjacency_matrix()
+    
