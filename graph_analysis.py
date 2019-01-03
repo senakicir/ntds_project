@@ -14,6 +14,7 @@ class Graph():
     def form_laplacian(self):
         self.laplacian = self.D - self.adjacency  # combinatorial laplacian
         return self.laplacian
+
     def form_incidence(self):
         # Find incidence matrix. Since our graph is undirected, we chose to only consider the upper right
         # triangle of our adjacency matrix when finding the gradient.
