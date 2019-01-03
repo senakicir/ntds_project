@@ -11,9 +11,9 @@ class Graph():
         self.n_nodes = len(adjacency)
         self.n_edges = int(adjacency.sum() // 2)
         self.n_edges2 = np.count_nonzero(adjacency)//2
-        self.D = np.diag(adjacency.sum(axis=1))
-        self.D_norm = np.diag(np.sum(adjacency, 1) ** (-1 / 2))
-        self.laplacian_combinatorial = self.D - - self.adjacency # combinatorial laplacian
+        self.D = np.diag(adjacency.sum(axis=1), dtype='float64')
+        self.D_norm = np.diag(np.sum(adjacency, 1) ** (-1 / 2), dtype='float64')
+        self.laplacian_combinatorial = self.D - self.adjacency # combinatorial laplacian
         self.laplacian_normalized = self.D_norm @ self.laplacian_combinatorial @ self.D_norm
 
     def get_laplacian(self, normalized=False):
