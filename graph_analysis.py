@@ -8,47 +8,51 @@ import pygsp as pg
 class Graph():
     def __init__(self, adjacency):
         self.adjacency = adjacency
+        self.n_nodes = len(adjacency)
+        self.n_edges = int(adjacency.sum() // 2)
+        self.n_edges2 = np.count_nonzero(adjacency)//2
         self.D = np.diag(adjacency.sum(axis=1))
-        self.sqrt_D = np.power(np.linalg.inv(D), 0.5)
+        self.D_norm = np.diag(np.sum(adjacency, 1) ** (-1 / 2))
+        self.laplacian_combinatorial = self.D - - self.adjacency # combinatorial laplacian
+        self.laplacian_normalized = self.D_norm @ self.laplacian_combinatorial @ self.D_norm
 
-    def form_laplacian(self):
-        self.laplacian = self.D - self.adjacency  # combinatorial laplacian
+    def get_laplacian(self, normalized=False):
+        self.laplacian = self.laplacian_combinatorial  # combinatorial laplacian
+        if normalized:
+            self.laplacian = self.laplacian_normalized
         return self.laplacian
 
-    def form_incidence(self):
+    def compute_gradient(self, normalized=False):
         # Find incidence matrix. Since our graph is undirected, we chose to only consider the upper right
         # triangle of our adjacency matrix when finding the gradient.
-        normalized_incidence = np.zeros((n_nodes, n_edges))
-        edge_map = np.full((n_nodes, n_nodes), -1)
-        edge_indices = np.where(adjacency > 0)
-        next_edge = 0
-        for i, j in (zip(edge_indices[0], edge_indices[1])):
-            if edge_map[i, j] == -1:
-                edge_map[i, j] = next_edge
-                edge_map[j, i] = next_edge
-                normalized_incidence[i, next_edge] = np.sqrt(adjacency[i, j]) * sqrt_D[i, i]
-                next_edge += 1
-            else:
-                normalized_incidence[i, edge_map[i, j]] = -np.sqrt(adjacency[i, j]) * sqrt_D[i, i]
-        self.normalized_incidence = normalized_incidence
-        return self.normalized_incidence
+        self.S = np.zeros((self.n_nodes, self.n_edges), dtype='float64')
+        self.S_normalized = np.zeros((self.n_nodes, self.n_edges), dtype='float64')
+        edge_idx = 0
+        for i in range(self.n_nodes):
+            for k in range(i):
+                if self.adjacency[i, k] == 1.0:
+                    self.S[i, edge_idx] = 1
+                    self.S[k, edge_idx] = -1
+                    self.S_normalized[i, edge_idx] = np.sqrt(self.adjacency[i,k]) * self.D_norm[i,k]
+                    self.S_normalized[k, edge_idx] = -np.sqrt(self.adjacency[i,k]) * self.D_norm[i,k]
+                    edge_idx += 1
 
-    # # Question part
-    # laplacian = sparse.csr_matrix(sqrt_D @ L @ sqrt_D)
-    # gradient = sparse.csr_matrix(np.transpose(normalized_incidence))
-    # labels = np.load('labels.npy')  # the labels for hip-hop and rock (-1 and 1)
-    # print('Number of nodes: ', n_nodes)
-    # eigenvalues, eigenvectors = np.linalg.eigh(laplacian.toarray())
-    # ## Sorting Eigenvalues and EigenVectors
-    # sorted_indexes = eigenvalues.argsort()
-    # eigenvalues = np.array(eigenvalues[sorted_indexes])
-    # eigenvectors = np.array(eigenvectors[sorted_indexes])
-    #
-    # e = eigenvalues  # Ordered Laplacian eigenvalues.
-    # U = eigenvectors  # Ordered graph Fourier basis.
-    # # We use it only for plotting!
-    # graph = pg.graphs.Graph(adjacency, lap_type='normalized')
-    # graph.set_coordinates('spring')
-if __name__ == "__main__":
-    save_adjacency_matrix()
+        assert np.allclose(self.S @ self.S.T, self.laplacian_combinatorial), "Wrong incidence matrix"
+        assert np.allclose(self.S_normalized @ self.S_normalized.T, self.laplacian_normalized), "Wrong normalized incidence matrix"
+
+        if normalized:
+            return self.S
+        else:
+            return self.S_normalized
+
+    def compute_fourier_basis(self, normalized=False):
+        # e: Ordered Laplacian eigenvalues
+        # U: Ordered graph Fourier basis
+        self.e, self.U = np.linalg.eigh(self.laplacian_combinatorial)
+        self.e_normalized, self.U_normalized = np.linalg.eigh(self.laplacian_normalized)
+        if normalized:
+            return self.e_normalized, self.U_normalized
+        else:
+            return self.e, self.U
+
     
