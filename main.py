@@ -43,11 +43,10 @@ if __name__ == "__main__":
         ##############################################################################################################
         n_trials = 10
         p=1
-        pdb.set_trace()
 
-        graph.transductive_learning(w, thresholds, n_trials, gt_labels, p)
+        graph.transductive_learning(w, thresholds, n_trials, gt_labels, gt_labels_test, p)
         p=2
-        graph.transductive_learning(w, thresholds, n_trials, gt_labels, p)
+        graph.transductive_learning(w, thresholds, n_trials, gt_labels, gt_labels_test, p)
 
         #####
         #SVM#
