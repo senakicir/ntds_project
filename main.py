@@ -43,7 +43,6 @@ if __name__ == "__main__":
         ##############################################################################################################
         n_trials = 10
         p=1
-
         graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
         p=2
         graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
@@ -56,7 +55,7 @@ if __name__ == "__main__":
         predicted_classes_svm = svm_clf.classify(features_test)
         print('SVM Percentage Error: {:.2f}'.format(error_func(gt_labels_test, predicted_classes_svm)))
 
-        ###########
+        ###########m
         #SVM + PCA#
         ###########
         svm_pca_clf = SVM()

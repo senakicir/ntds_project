@@ -171,6 +171,7 @@ class Our_Graph():
                 # Threshold to -1 and 1
                 sol_bin = (sol > threshold).astype(int)
                 sol_bin[sol_bin == 0] = -1
+                pdb.set_trace()
                 print('Percentage Error with threshold: {:.2f}'.format(error_func(labels_bin[test_ind], sol_bin[test_ind])))
 
     
