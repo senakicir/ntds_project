@@ -41,7 +41,7 @@ if __name__ == "__main__":
         ##############################################################################################################
         #Transductive learning by minimizing a (semi-) p-norm of the graph gradient applied to the signal of interest#
         ##############################################################################################################
-        n_trials = 2
+        n_trials = 10
         p=1
         pdb.set_trace()
 
