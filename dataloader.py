@@ -102,6 +102,9 @@ def save_adjacency_matrix(name = ""):
     np.save(name, adjacency)
     np.save("labels.npy", genres_gt)
 
+    #save selected features
+    np.save("features_selected.npy", feature_values)
+
 def load_adjacency_matrix_from_npy(name = ""):
     if name == "":
         name = 'basic_adjacency.npy'
@@ -109,6 +112,12 @@ def load_adjacency_matrix_from_npy(name = ""):
     adjacency_pg = pg.graphs.Graph(adjacency, lap_type = 'normalized')
     adjacency_pg.set_coordinates('spring') #for visualization
     return adjacency, adjacency_pg
+
+def load_features_selected_from_numpy(name= ""):
+    if name == "":
+        name = "features_selected.npy"
+    features_selected = np.load(name)
+    return features_selected
 
 def load_labels_from_npy():
     return np.load("labels.npy")

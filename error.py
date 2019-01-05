@@ -12,7 +12,8 @@ def error_func(gt_labels, pred_labels):
 
     if len(gt_labels.shape) == 2:
         gt_labels = gt_labels.squeeze(1)
+    if len(pred_labels.shape) == 2:
         pred_labels = pred_labels.squeeze(1)
-        errors = sum(gt_labels != pred_labels)
-        error_rate = (errors/gt_labels.shape[0]) * 100
+    errors = sum(gt_labels != pred_labels)
+    error_rate = (errors/gt_labels.shape[0]) * 100
     return error_rate
