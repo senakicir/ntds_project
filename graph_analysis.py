@@ -159,7 +159,7 @@ class Our_Graph():
         b[mask_pos] = labels_bin[mask_pos]
         return b
 
-    def transductive_learning(self, w, thresholds, n_trials, labels_bin, labels_bin_test, p, **kwargs):
+    def transductive_learning(self, w, thresholds, n_trials, labels_bin, test_ind, p, **kwargs):
         for i, threshold in enumerate(thresholds):
             # Simulate n_trials times
             for trial in range(n_trials):
@@ -171,8 +171,6 @@ class Our_Graph():
                 # Threshold to -1 and 1
                 sol_bin = (sol > threshold).astype(int)
                 sol_bin[sol_bin == 0] = -1
-                print(labels_bin_test.shape)
-                print(len(sol_bin))
-                print('Percentage Error with threshold: {:.2f}'.format(error_func(labels_bin_test, sol_bin)))
+                print('Percentage Error with threshold: {:.2f}'.format(error_func(labels_bin[test_ind], sol_bin[test_ind])))
 
     

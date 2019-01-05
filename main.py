@@ -44,9 +44,9 @@ if __name__ == "__main__":
         n_trials = 10
         p=1
 
-        graph.transductive_learning(w, thresholds, n_trials, gt_labels, gt_labels_test, p)
+        graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
         p=2
-        graph.transductive_learning(w, thresholds, n_trials, gt_labels, gt_labels_test, p)
+        graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
 
         #####
         #SVM#
