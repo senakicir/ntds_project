@@ -4,12 +4,34 @@ import math
 import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
-from sklearn.svm import SVC
+import torch.optim as optim
+from models import GCN
 
 class Trainer():
-    def __init__(self, lr=0.01):
-        pass
-    def train(self, features_tr, labels_tr):
+    def __init__(self, adjacency, features, labels, hidden, n_class, dropout=0.5, cuda=True,lr=0.01):
+        self.adjacency = adjacency
+        self.features = features
+        self.labels = labels
+        self.hidden = hidden
+        self.n_class = n_class
+        self.dropout = dropout
+        self.cuda = cuda
+        self.lr = lr
+        self.model = GCN(nfeat=features.shape[1],
+                    nhid=hidden,
+                    nclass=n_class,
+                    dropout=dropout)
+
+        self.optimizer = optim.Adam(model.parameters(),
+                               lr=args.lr, weight_decay=args.weight_decay)
+
+        if self.cuda:
+            self.model.cuda()
+            self.features = self.features.cuda()
+            self.adjaceny = self.adjacency.cuda()
+            self.labels = self.labels.cuda()
+
+    def train(self, features, labels):
         pass
     def test(self, features_test):
         pass

@@ -9,6 +9,7 @@ from models import *
 from error import error_func
 from graph_analysis import Our_Graph
 from sklearn.decomposition import PCA
+from trainer import Trainer
 
 
 if __name__ == "__main__":
