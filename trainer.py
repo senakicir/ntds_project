@@ -32,6 +32,13 @@ class Trainer():
             self.labels = self.labels.cuda()
 
     def train(self, features, labels):
-        pass
+        t = time.time()
+        self.model.train()
+        self.optimizer.zero_grad()
+        self.output = self.model(self.features, self.adjaceny)
+
+        loss_train.backward()
+        self.optimizer.step()
+
     def test(self, features_test):
         pass
