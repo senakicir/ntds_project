@@ -21,7 +21,7 @@ class Our_Graph():
         self.D_norm = np.power(np.linalg.inv(self.D),0.5)
         self.laplacian_combinatorial = self.D - self.adjacency # combinatorial laplacian
         self.laplacian_normalized = self.D_norm @ self.laplacian_combinatorial @ self.D_norm
-        self.compute_gradient(normalized=False)
+        #self.compute_gradient(normalized=False)
         self.compute_fourier_basis(normalized=False)
 
     def get_laplacian(self, normalized=False):
@@ -160,9 +160,9 @@ class Our_Graph():
         return b
 
     def transductive_learning(self, w, thresholds, n_trials, labels_bin, test_ind, p, **kwargs):
-        for i, threshold in enumerate(thresholds):
+        for _, threshold in enumerate(thresholds):
             # Simulate n_trials times
-            for trial in range(n_trials):
+            for _ in range(n_trials):
                 # Subsample randomly
                 subsampled = labels_bin * w
                 # Solve p-norm interpolation

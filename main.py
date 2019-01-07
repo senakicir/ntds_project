@@ -8,14 +8,17 @@ from visualization import *
 from models import *
 from error import error_func
 from graph_analysis import Our_Graph
-from sklearn.decomposition import PCA
 from trainer import Trainer
 
 
 if __name__ == "__main__":
-    adjacency, adjacency_pg = load_adjacency_matrix_from_npy()
-    features = load_features_selected_from_numpy()
-    gt_labels = load_labels_from_npy()
+    default_name = ""
+    pca_name = "normalized_PCA_"
+
+    features, gt_labels, adjacency, adjacency_pg = load_features_labels_adjacency(default_name)
+    features_pca, gt_labels, adjacency_pca, adjacency_pg_pca = load_features_labels_adjacency(pca_name)
+    plot_gt_labels(adjacency_pg, gt_labels, default_name)
+    plot_gt_labels(adjacency_pg_pca, gt_labels, pca_name)
     graph = Our_Graph(adjacency)
 
     ########Split the data into training and test data########
@@ -29,24 +32,28 @@ if __name__ == "__main__":
         mask_pos = np.where(w == 1)
         all_ind = np.arange(w.shape[0])
         test_ind = list(set(list(all_ind)).difference(mask_pos[0]))
+
         features_tr = features[mask_pos]
         features_test = features[test_ind]
+        features_pca_tr = features_pca[mask_pos]
+        features_pca_test = features_pca[test_ind]
+
         gt_labels_tr = gt_labels[mask_pos].squeeze()
         gt_labels_test = gt_labels[test_ind].squeeze()
 
         #####################
         #Spectral Clustering#
         #####################
-        graph.spectral_clustering(test_ind, gt_labels_test)
+        #graph.spectral_clustering(test_ind, gt_labels_test)
 
         ##############################################################################################################
         #Transductive learning by minimizing a (semi-) p-norm of the graph gradient applied to the signal of interest#
         ##############################################################################################################
-        n_trials = 10
-        p=1
-        graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
-        p=2
-        graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
+        #n_trials = 10
+        #p=1
+        #graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
+        #p=2
+        #graph.transductive_learning(w, thresholds, n_trials, gt_labels, test_ind, p)
 
         #####
         #SVM#
@@ -54,17 +61,15 @@ if __name__ == "__main__":
         svm_clf = SVM()
         svm_clf.train(features_tr, gt_labels_tr)
         predicted_classes_svm = svm_clf.classify(features_test)
+        plot_confusion_matrix(predicted_classes_svm, gt_labels_test, ['Hip-Hop', 'Rock'], default_name)
         print('SVM Percentage Error: {:.2f}'.format(error_func(gt_labels_test, predicted_classes_svm)))
 
         ###########m
         #SVM + PCA#
         ###########
         svm_pca_clf = SVM()
-        pca = PCA(n_components=2, svd_solver='arpack')
-        features_pca_tr = pca.fit_transform(features_tr)
-        features_pca_test = pca.transform(features_test)
-        svm_clf.train(features_pca_tr, gt_labels_tr)
-        predicted_classes_svm_pca = svm_clf.classify(features_pca_test)
-        print('SVM + PCA Percentage Error: {:.2f}'.format(error_func(gt_labels_test, predicted_classes_svm)))
+        svm_pca_clf.train(features_pca_tr, gt_labels_tr)
+        predicted_classes_svm_pca = svm_pca_clf.classify(features_pca_test)
+        plot_confusion_matrix(predicted_classes_svm_pca, gt_labels_test, ['Hip-Hop', 'Rock'], pca_name)
+        print('SVM + PCA Percentage Error: {:.2f}'.format(error_func(gt_labels_test, predicted_classes_svm_pca)))
 
-    plot_gt_labels(adjacency_pg, gt_labels)

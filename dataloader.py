@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import ast
 from scipy.spatial.distance import pdist, squareform
+from utils import *
 import pdb
 import pygsp as pg
 
@@ -91,37 +92,42 @@ def form_adjacency(features, threshold = 0.66, metric ='correlation'):
     assert num_of_disconnected_nodes == 0
     return adjacency
 
-def save_adjacency_matrix(name = ""):
-    if name == "":
-        name = 'basic_adjacency.npy'
+def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True):
     tracks, features = csv_loader()
     feature_values, genres_gt = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'])
-    adjacency = form_adjacency(feature_values, threshold = 0.66, metric ='correlation')
-
-    #save adjacency matrix & labels
-    np.save(name, adjacency)
     np.save("labels.npy", genres_gt)
 
-    #save selected features
-    np.save("features_selected.npy", feature_values)
+    name = ""
+    if (normalize_features):
+        feature_values = normalize_feat(feature_values)
+        name += "normalized_"
+    if use_PCA:    
+        feature_values = generate_PCA_features(feature_values)
+        name += "PCA_"
+    if rem_outliers:
+        feature_values = remove_outliers(feature_values)
+        name += "nooutlier_"
+    
+    adjacency = form_adjacency(feature_values, threshold = 0.66, metric = "correlation")
+    np.save(name + "adjacency.npy", adjacency)
+    np.save(name + "features.npy", feature_values)
+    return name
 
-def load_adjacency_matrix_from_npy(name = ""):
-    if name == "":
-        name = 'basic_adjacency.npy'
-    adjacency =  np.load(name)
+def save_adjacency(name, features, threshold = 0.66, metric = "correlation"):
+    adjacency = form_adjacency(features, threshold = threshold, metric = metric)
+    np.save(name, adjacency)
+
+def load_features_labels_adjacency(name):
+    features = np.load(name + "features.npy")
+    adjacency =  np.load(name + "adjacency.npy")
+    labels = np.load("labels.npy")
+
     adjacency_pg = pg.graphs.Graph(adjacency, lap_type = 'normalized')
     adjacency_pg.set_coordinates('spring') #for visualization
-    return adjacency, adjacency_pg
-
-def load_features_selected_from_numpy(name= ""):
-    if name == "":
-        name = "features_selected.npy"
-    features_selected = np.load(name)
-    return features_selected
-
-def load_labels_from_npy():
-    return np.load("labels.npy")
+    return features, labels, adjacency, adjacency_pg
 
 if __name__ == "__main__":
-    save_adjacency_matrix()
-    
+    name1 = save_features_labels_adjacency(normalize_features = False, use_PCA = False, rem_outliers= False)
+    name2 = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False)
+    name3 = save_features_labels_adjacency(normalize_features = True, use_PCA = False, rem_outliers= False)
+    print(name3)
