@@ -17,5 +17,3 @@ def normalize_feat(features):
     std_feat = np.std(features, axis=0)
     normalized_feat = (features-mean_feat)/std_feat
     return normalized_feat
-
-    

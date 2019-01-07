@@ -113,10 +113,6 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     np.save(name + "features.npy", feature_values)
     return name
 
-def save_adjacency(name, features, threshold = 0.66, metric = "correlation"):
-    adjacency = form_adjacency(features, threshold = threshold, metric = metric)
-    np.save(name, adjacency)
-
 def load_features_labels_adjacency(name):
     features = np.load(name + "features.npy")
     adjacency =  np.load(name + "adjacency.npy")
@@ -129,5 +125,4 @@ def load_features_labels_adjacency(name):
 if __name__ == "__main__":
     name1 = save_features_labels_adjacency(normalize_features = False, use_PCA = False, rem_outliers= False)
     name2 = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False)
-    name3 = save_features_labels_adjacency(normalize_features = True, use_PCA = False, rem_outliers= False)
-    print(name3)
+    print(name1)

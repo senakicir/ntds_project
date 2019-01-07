@@ -17,7 +17,6 @@ class Our_Graph():
         self.n_nodes = len(adjacency)
         self.n_edges = np.count_nonzero(adjacency)//2
         self.D = np.diag(adjacency.sum(axis=1))
-       # self.D_norm = np.diag(np.sum(adjacency, 1) ** (-1 / 2))
         self.D_norm = np.power(np.linalg.inv(self.D),0.5)
         self.laplacian_combinatorial = self.D - self.adjacency # combinatorial laplacian
         self.laplacian_normalized = self.D_norm @ self.laplacian_combinatorial @ self.D_norm
@@ -63,16 +62,20 @@ class Our_Graph():
         else:
             return self.e, self.U
 
-    def get_laplacian_eigenmaps(self, laplacian, new_dim=2, use_normalized=True):
-        eigenvalues, eigenvectors = sparse.linalg.eigsh(laplacian, which='SM', k=new_dim + 1)
+    def get_laplacian_eigenmaps(self, new_dim=10, use_normalized=True):
+        if use_normalized:
+            laplacian = self.laplacian_normalized
+        else:
+            laplacian = self.laplacian_combinatorial
+        _, eigenvectors = sparse.linalg.eigsh(laplacian, which='SM', k=new_dim + 1)
         embeddings = eigenvectors[:, 1:new_dim + 1]
         if use_normalized:
             return (embeddings.T * np.diag(self.D_norm)).T
         return embeddings
 
     def spectral_clustering(self, test_pos, labels_bin):
-        fiedler_vector_c = self.get_laplacian_eigenmaps(self.laplacian_combinatorial, new_dim=1, use_normalized=False).squeeze()
-        fiedler_vector_n = self.get_laplacian_eigenmaps(self.laplacian_normalized, new_dim=1).squeeze()
+        fiedler_vector_c = self.get_laplacian_eigenmaps(new_dim=1, use_normalized=False).squeeze()
+        fiedler_vector_n = self.get_laplacian_eigenmaps(new_dim=1, use_normalized=True).squeeze()
 
         # We do clustering according to the fiedler vector
         clusters_c = np.zeros([self.n_nodes, ])
