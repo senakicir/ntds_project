@@ -15,14 +15,13 @@ def run_demo():
     default_name = ""
     pca_name = "normalized_PCA_"
 
-    features, gt_labels, adjacency, adjacency_pg = load_features_labels_adjacency(default_name)
-    features_pca, gt_labels, adjacency_pca, adjacency_pg_pca = load_features_labels_adjacency(pca_name)
-    plot_gt_labels(adjacency_pg, gt_labels, default_name)
-    plot_gt_labels(adjacency_pg_pca, gt_labels, pca_name)
+    features, gt_labels, adjacency, pygsp_graph = load_features_labels_adjacency(default_name)
+    features_pca, gt_labels, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
+    plot_gt_labels(pygsp_graph, gt_labels, default_name)
+    plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
-    #graph = Our_Graph(adjacency_pca)
-    #features_lap = graph.get_laplacian_eigenmaps()
-    #adjacency_pg.get_laplacian_eigenmaps
+    #our_graph = Our_Graph(adjacency_pca)
+    #features_lap = our_graph.get_laplacian_eigenmaps()
 
     svm_clf = SVM()
     random_forest_clf = Random_Forest()
@@ -40,13 +39,13 @@ def run_demo():
 #########
 
     mean_error_svm, std_error_svm = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name+"svm_")
-    print('SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+    print('Normalized, PCA, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
     mean_error_rf, std_error_rf = cross_validation(features_pca, gt_labels, random_forest_clf, K=5, name=pca_name+"rf_")
-    print('Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+    print('Normalized, PCA, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
     mean_error_knn, std_error_knn = cross_validation(features_pca, gt_labels, knn_clf, K=5, name=pca_name+"knn_")
-    print('KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+    print('Normalized, PCA, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
 
 
 def run_grid_search_for_optimal_param():

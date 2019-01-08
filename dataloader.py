@@ -125,9 +125,9 @@ def load_features_labels_adjacency(name):
     adjacency =  np.load("dataset_saved_numpy/" + name + "adjacency.npy")
     labels = np.load("dataset_saved_numpy/labels.npy")
 
-    adjacency_pg = pg.graphs.Graph(adjacency, lap_type = 'normalized')
-    adjacency_pg.set_coordinates('spring') #for visualization
-    return features, labels, adjacency, adjacency_pg
+    pygsp_graph = pg.graphs.Graph(adjacency, lap_type = 'normalized')
+    pygsp_graph.set_coordinates('spring') #for visualization
+    return features, labels, adjacency, pygsp_graph
 
 if __name__ == "__main__":
     name1 = save_features_labels_adjacency(normalize_features = False, use_PCA = False, rem_outliers= False)
