@@ -40,7 +40,7 @@ def cross_validation(features, labels, model, K=5, classes = ['Hip-Hop', 'Rock']
 def grid_search_for_param(features, labels, model, model_name, K=5, classes = ['Hip-Hop', 'Rock'], name = ""):
     if model_name == "KNN":
         num_of_neigh_range = list(range(10,100,2))
-        errors = np.array([len(num_of_neigh_range), ])
+        errors = np.zeros([len(num_of_neigh_range), ])
         for ind, num_of_neigh in enumerate(num_of_neigh_range):
             model.reset(num_of_neigh)
             mean_error, _ = cross_validation(features, labels, model, K, classes, name)
@@ -51,9 +51,8 @@ def grid_search_for_param(features, labels, model, model_name, K=5, classes = ['
 
     if model_name == "Random_Forest":
         n_estimators_range = list(range(50, 200, 25))
-        max_depth_range = list(range(1, 4))
-        errors = np.array([len(n_estimators_range), len(max_depth_range)])
-        print(errors.shape)
+        max_depth_range = list(range(1, 4, 1))
+        errors = np.zeros([len(n_estimators_range), len(max_depth_range)])
         for i, n_estimators in enumerate(n_estimators_range):
             for j, max_depth in enumerate(max_depth_range):
                 model.reset(n_estimators, max_depth)
