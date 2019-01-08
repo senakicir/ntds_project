@@ -5,7 +5,7 @@ from scipy.spatial.distance import pdist, squareform
 from utils import *
 import pdb
 import pygsp as pg
-
+import os
 
 def load(filename):
     if 'features' in filename:
@@ -95,7 +95,6 @@ def form_adjacency(features, threshold = 0.66, metric ='correlation'):
 def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True, threshold = 0.66, metric = "correlation"):
     tracks, features = csv_loader()
     feature_values, genres_gt = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'])
-    np.save("labels.npy", genres_gt)
 
     name = ""
     if (normalize_features):
@@ -109,14 +108,22 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
         name += "nooutlier_"
     
     adjacency = form_adjacency(feature_values, threshold = 0.66, metric = "correlation")
-    np.save(name + "adjacency.npy", adjacency)
-    np.save(name + "features.npy", feature_values)
+
+    if not os.path.exists("dataset_saved_numpy"):
+        os.makedirs("dataset_saved_numpy")
+    np.save("dataset_saved_numpy/labels.npy", genres_gt)
+    np.save("dataset_saved_numpy/"+ name + "adjacency.npy", adjacency)
+    np.save("dataset_saved_numpy/"+ name + "features.npy", feature_values)
     return name
 
 def load_features_labels_adjacency(name):
-    features = np.load(name + "features.npy")
-    adjacency =  np.load(name + "adjacency.npy")
-    labels = np.load("labels.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "features.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "adjacency.npy")
+    assert os.path.exists("dataset_saved_numpy/labels.npy")
+
+    features = np.load("dataset_saved_numpy/" + name + "features.npy")
+    adjacency =  np.load("dataset_saved_numpy/" + name + "adjacency.npy")
+    labels = np.load("dataset_saved_numpy/labels.npy")
 
     adjacency_pg = pg.graphs.Graph(adjacency, lap_type = 'normalized')
     adjacency_pg.set_coordinates('spring') #for visualization
@@ -125,5 +132,3 @@ def load_features_labels_adjacency(name):
 if __name__ == "__main__":
     name1 = save_features_labels_adjacency(normalize_features = False, use_PCA = False, rem_outliers= False)
     name2 = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False)
-    name3 = save_features_labels_adjacency(normalize_features = True, use_PCA = False, rem_outliers= False, threshold=0.4)
-    print(name3)

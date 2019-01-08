@@ -5,6 +5,8 @@ import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
 from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
 
 class GraphConvolution(Module):
     """
@@ -65,10 +67,33 @@ class SVM():
     def classify(self, features_test):
         return self.clf.predict(features_test)
 
+class KNN():
+    def __init__(self):
+        self.clf = KNeighborsClassifier(n_neighbors=42)
+
+    def train(self, features_tr, labels_tr):
+        self.clf.fit(features_tr, labels_tr)
+
+    def classify(self, features_test):
+        return self.clf.predict(features_test) 
+
+    def reset(self, new_n_neigh):
+        self.clf = KNeighborsClassifier(n_neighbors=new_n_neigh)
+
+
 class K_Means():
     def __init__(self):
         pass
 
 class Random_Forest():
     def __init__(self):
-        pass
+        self.clf = RandomForestClassifier(n_estimators=100, max_depth=2)
+
+    def train(self, features_tr, labels_tr):
+        self.clf.fit(features_tr, labels_tr)
+
+    def classify(self, features_test):
+        return self.clf.predict(features_test)
+
+    def reset(self, new_n_est, new_max_depth):
+        self.clf = RandomForestClassifier(n_estimators=new_n_est, max_depth=new_max_depth)

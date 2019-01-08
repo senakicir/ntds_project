@@ -5,13 +5,13 @@ import pdb
 from dataloader import *
 from utils import *
 from visualization import *
-from models import *
+from models import SVM, Random_Forest, KNN
 from error import error_func
 from graph_analysis import Our_Graph
 from trainer import Trainer
-from evaluate import cross_validation
+from evaluate import cross_validation, grid_search_for_param
 
-if __name__ == "__main__":
+def run_demo():
     default_name = ""
     pca_name = "normalized_PCA_"
 
@@ -25,10 +25,34 @@ if __name__ == "__main__":
     #adjacency_pg.get_laplacian_eigenmaps
 
     svm_clf = SVM()
-    mean_error, std_error = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name)
-    print('Cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error, std_error))
+    mean_error_svm, std_error_svm = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name+"svm_")
+    print('SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+
+    random_forest_clf = Random_Forest()
+    mean_error_rf, std_error_rf = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name+"rf_")
+    print('Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+
+    knn_clf = KNN()
+    mean_error_knn, std_error_knn = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name+"rf_")
+    print('KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
 
 
+def run_grid_search_for_optimal_param():
+    pca_name = "normalized_PCA_"
+    features_pca, gt_labels, adjacency_pca, adjacency_pg_pca = load_features_labels_adjacency(pca_name)
+
+    svm_clf = SVM()
+    random_forest_clf = Random_Forest()
+    knn_clf = KNN()
+
+    #grid_search_for_param(features_pca, gt_labels, knn_clf, "KNN", K=5, name=pca_name) #ran it and found 42
+    grid_search_for_param(features_pca, gt_labels, random_forest_clf, "Random_Forest", K=5, name=pca_name)
+
+if __name__ == "__main__":
+    run_grid_search_for_optimal_param()
+
+
+#THIS FUNCTION WILL BE USELESS SOON BUT DO NOT DELETE
 def lol():
     default_name = ""
     pca_name = "normalized_PCA_"
