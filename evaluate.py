@@ -45,7 +45,7 @@ def grid_search_for_param(features, labels, model, model_name, K=5, classes = ['
             model.reset(num_of_neigh)
             mean_error, _ = cross_validation(features, labels, model, K, classes, name)
             errors[ind] = mean_error
-        min_index = np.argmin(errors_arr)
+        min_index = np.argmin(errors)
         print('Minimum error of KNN is {:.2f} with {:d} number of neighbours.'.format(errors_arr[min_index], num_of_neigh_range[min_index]))
         plot_errors_over_param(num_of_neigh_range, errors, name, model_name)
 
