@@ -67,7 +67,10 @@ class Our_Graph():
             laplacian = self.laplacian_normalized
         else:
             laplacian = self.laplacian_combinatorial
-        _, eigenvectors = sparse.linalg.eigsh(laplacian, which='SM', k=new_dim + 1)
+        eigenvalues, eigenvectors = sparse.linalg.eigsh(laplacian, which='SM', k=new_dim + 1)
+        sort_ind = np.argsort(eigenvalues)
+        eigenvalues = eigenvalues[sort_ind]
+        eigenvectors = eigenvectors[:,sort_ind]
         embeddings = eigenvectors[:, 1:new_dim + 1]
         if use_normalized:
             return (embeddings.T * np.diag(self.D_norm)).T

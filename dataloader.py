@@ -92,7 +92,7 @@ def form_adjacency(features, threshold = 0.66, metric ='correlation'):
     assert num_of_disconnected_nodes == 0
     return adjacency
 
-def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True):
+def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True, threshold = 0.66, metric = "correlation"):
     tracks, features = csv_loader()
     feature_values, genres_gt = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'])
     np.save("labels.npy", genres_gt)
@@ -125,4 +125,5 @@ def load_features_labels_adjacency(name):
 if __name__ == "__main__":
     name1 = save_features_labels_adjacency(normalize_features = False, use_PCA = False, rem_outliers= False)
     name2 = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False)
-    print(name1)
+    name3 = save_features_labels_adjacency(normalize_features = True, use_PCA = False, rem_outliers= False, threshold=0.4)
+    print(name3)

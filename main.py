@@ -15,16 +15,17 @@ if __name__ == "__main__":
     default_name = ""
     pca_name = "normalized_PCA_"
 
-    features, gt_labels, adjacency, adjacency_pg = load_features_labels_adjacency(default_name)
+    #features, gt_labels, adjacency, adjacency_pg = load_features_labels_adjacency(default_name)
     features_pca, gt_labels, adjacency_pca, adjacency_pg_pca = load_features_labels_adjacency(pca_name)
-    plot_gt_labels(adjacency_pg, gt_labels, default_name)
+    #plot_gt_labels(adjacency_pg, gt_labels, default_name)
     plot_gt_labels(adjacency_pg_pca, gt_labels, pca_name)
 
-    #graph = Our_Graph(adjacency)
+    #graph = Our_Graph(adjacency_pca)
     #features_lap = graph.get_laplacian_eigenmaps()
+    #adjacency_pg.get_laplacian_eigenmaps
 
     svm_clf = SVM()
-    mean_error, std_error = cross_validation(features_pca, gt_labels, svm_clf, K=5)
+    mean_error, std_error = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name)
     print('Cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error, std_error))
 
 
