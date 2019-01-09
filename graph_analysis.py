@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import ast
+import scipy.sparse as sp
 from scipy.spatial.distance import pdist, squareform
 import pdb
 import pygsp as pg
@@ -28,6 +29,10 @@ class Our_Graph():
         if normalized:
             self.laplacian = self.laplacian_normalized
         return self.laplacian
+
+    def normalize_adjacency(self, adjacency):
+        normalized_adjacency = self.D_norm @ adjacency @ self.D_norm
+        return normalized_adjacency
 
     def compute_gradient(self, normalized=False):
         # Find incidence matrix. Since our graph is undirected, we chose to only consider the upper right
