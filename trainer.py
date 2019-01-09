@@ -5,13 +5,18 @@ import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
 import torch.optim as optim
+import scipy.sparse as sp
 from models import GCN
 from error import error_func
+from graph_analysis import Our_Graph
+
+
 
 class Trainer():
-    def __init__(self, adjacency, features, labels, hidden, n_class, dropout=0.5, cuda=True,lr=0.01, weight_decay=5e-4, epochs=10):
+    def __init__(self, adjacency, features, D_norm, labels, hidden, n_class, dropout=0.5, cuda=True,lr=0.01, weight_decay=5e-4, epochs=10):
         self.adjacency = adjacency
         self.features = features
+        self.D_norm = D_norm
         self.labels = labels
         self.hidden = hidden
         self.n_class = n_class
@@ -27,11 +32,25 @@ class Trainer():
 
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
 
+        self.features = torch.FloatTensor(np.array(self.features.todense()))
+        self.adjacency = sp.coo_matrix(self.adjacency)
+        self.adjacency = self.D_norm @ (self.adjacency + sp.eye(self.adjacency.shape[0])) @ D_norm
+        self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
+
         if self.cuda:
             self.model.cuda()
             self.features = self.features.cuda()
             self.adjaceny = self.adjacency.cuda()
             self.labels = self.labels.cuda()
+
+    def sparse_mx_to_torch_sparse_tensor(sparse_mx):
+        """Convert a scipy sparse matrix to a torch sparse tensor."""
+        sparse_mx = sparse_mx.tocoo().astype(np.float32)
+        indices = torch.from_numpy(
+            np.vstack((sparse_mx.row, sparse_mx.col)).astype(np.int64))
+        values = torch.from_numpy(sparse_mx.data)
+        shape = torch.Size(sparse_mx.shape)
+        return torch.sparse.FloatTensor(indices, values, shape)
 
     def train(self, epoch):
         t = time.time()
