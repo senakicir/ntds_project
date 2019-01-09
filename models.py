@@ -4,15 +4,11 @@ import math
 import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
-<<<<<<< HEAD
+
 import sklearn.svm as svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
-=======
-from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
->>>>>>> db9d1b31269ee043328b74dfd53a45c8f0a035aa
 
 class GraphConvolution(Module):
     """
