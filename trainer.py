@@ -25,6 +25,9 @@ class Trainer():
         self.lr = lr
         self.weight_decay = weight_decay
         self.epochs = epochs
+        idx_train = range(140)
+        idx_val = range(200, 500)
+        idx_test = range(500, 1500)
         self.model = GCN(nfeat=features.shape[1],
                     nhid=hidden,
                     nclass=n_class,
@@ -36,6 +39,11 @@ class Trainer():
         self.adjacency = sp.coo_matrix(self.adjacency)
         self.adjacency = self.D_norm @ (self.adjacency + sp.eye(self.adjacency.shape[0])) @ D_norm
         self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
+        #!!!!!!!! np.where
+        self.labels = torch.LongTensor(self.labels)
+        self.idx_train = torch.LongTensor(idx_train)
+        self.idx_val = torch.LongTensor(idx_val)
+        self.idx_test = torch.LongTensor(idx_test)
 
         if self.cuda:
             self.model.cuda()
