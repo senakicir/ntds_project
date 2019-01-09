@@ -2,7 +2,6 @@ import numpy as np
 import pdb
 import pygsp as pg
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix
 import os
 
 # Your code here.
@@ -12,17 +11,17 @@ def plot_gt_labels(graph, labels, name):
 
     if not os.path.exists("visualizations"):
         os.makedirs("visualizations")
-    name += '_gt_clusters.png'
+    name += 'gt_clusters.png'
     plt.savefig("visualizations/" + name)
     plt.close()
 
-def plot_confusion_matrix(predictions, gt, classes, name):
-    our_confusion_matrix = confusion_matrix(gt, predictions)*100/len(gt)
+def plot_confusion_matrix(our_confusion_matrix, classes, name):
     _, ax = plt.subplots()
     plt.title('Confusion Matrix')
     plt.imshow(our_confusion_matrix)
     plt.colorbar()
     tick_marks = np.arange(len(classes))
+
     # Loop over data dimensions and create text annotations.
     for i in range(len(classes)):
         for j in range(len(classes)):
@@ -34,6 +33,21 @@ def plot_confusion_matrix(predictions, gt, classes, name):
 
     if not os.path.exists("visualizations"):
         os.makedirs("visualizations")
-    name += '_confusion_matrix.png'
+    name += 'confusion_matrix.png'
+    plt.savefig("visualizations/" + name)
+    plt.close()
+
+def plot_errors_over_param(num_of_neigh_range, errors, name, model_name):
+    _, ax = plt.subplots()
+    plt.title('Error vs. param for ' + model_name)
+    plt.plot(num_of_neigh_range, errors, marker = "^")
+
+    plt.ylabel('error')
+    if model_name == "KNN":
+        plt.xlabel('number of neighbors')
+
+    if not os.path.exists("visualizations"):
+        os.makedirs("visualizations")
+    name += 'grid_search_' + model_name + '.png'
     plt.savefig("visualizations/" + name)
     plt.close()

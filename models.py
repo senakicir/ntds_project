@@ -4,9 +4,15 @@ import math
 import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
+<<<<<<< HEAD
 import sklearn.svm as svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
+=======
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+>>>>>>> db9d1b31269ee043328b74dfd53a45c8f0a035aa
 
 class GraphConvolution(Module):
     """
@@ -73,6 +79,20 @@ class SVM():
     def accuracy(self, features_test, labels_test):
         return self.ctf.score(features_test,labels_test)
 
+class KNN():
+    def __init__(self):
+        self.clf = KNeighborsClassifier(n_neighbors=42)
+
+    def train(self, features_tr, labels_tr):
+        self.clf.fit(features_tr, labels_tr)
+
+    def classify(self, features_test):
+        return self.clf.predict(features_test)
+
+    def reset(self, new_n_neigh):
+        self.clf = KNeighborsClassifier(n_neighbors=new_n_neigh)
+
+
 class K_Means():
     def __init__(self, numb_clusters,seed=0):
         self.clf = KMeans(n_clusters=numb_clusters, random_state=seed)
@@ -85,6 +105,7 @@ class K_Means():
 
 class Random_Forest():
     def __init__(self,n_estimators, max_depth, criterion='gini', seed=0):
+        self.seed = seed
         self.clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,random_state=seed)
 
     def train(self, features_tr, labels_tr):
@@ -93,3 +114,5 @@ class Random_Forest():
         return self.clf.predict(features_tr,labels_tr)
     def accuracy(self, features_test, labels_test):
         return self.clf.score(features_test,labels_test)
+    def reset(self, new_n_est, new_max_depth):
+        self.clf = RandomForestClassifier(n_estimators=new_n_est, max_depth=new_max_depth,random_state=self.seed)
