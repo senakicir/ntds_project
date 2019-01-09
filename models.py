@@ -4,7 +4,9 @@ import math
 import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
-from sklearn.svm import SVC
+import sklearn.svm as svm
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.cluster import KMeans
 
 class GraphConvolution(Module):
     """
@@ -56,19 +58,38 @@ class GCN(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 class SVM():
-    def __init__(self):
-        self.clf = SVC(gamma='auto')
+    def __init__(self,kernel,poly_degree=3):
+        if kernel = 'linear':
+            self.clf = svm.LinearSVC(multi_class='ovr') # Can use 'crammer_singer’ but more expensive while not that much better accuracy(only more stable)
+        else:
+            self.clf = svm.SVC(gamma='auto', kernel=kernel,degree=poly_degree,decision_function_shape='ovr')
 
     def train(self, features_tr, labels_tr):
         self.clf.fit(features_tr, labels_tr)
 
-    def classify(self, features_test):
+    def evaluate(self, features_test):
         return self.clf.predict(features_test)
 
+    def accuracy(self, features_test, labels_test):
+        return self.ctf.score(features_test,labels_test)
+
 class K_Means():
-    def __init__(self):
-        pass
+    def __init__(self, numb_clusters,seed=0):
+        self.clf = KMeans(n_clusters=numb_clusters, random_state=seed)
+
+    def train(self, features_tr,labels_tr):
+        self.clusters = self.clf.fit_predict(features_tr)
+
+    def evaluate(self, features_test):
+        return self.clf.predict(features_test)
 
 class Random_Forest():
-    def __init__(self):
-        pass
+    def __init__(self,n_estimators, max_depth, criterion='gini', seed=0):
+        self.clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,random_state=seed)
+
+    def train(self, features_tr, labels_tr):
+        self.clf.fit(features_tr,labels_tr)
+    def evaluate(self, features_test):
+        return self.clf.predict(features_tr,labels_tr)
+    def accuracy(self, features_test, labels_test):
+        return self.clf.score(features_test,labels_test)
