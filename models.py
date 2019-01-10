@@ -80,11 +80,11 @@ class GCN():
         self.nhid = nhid
         self.nclass = labels.shape[-1]
         self.epochs = epochs
-        self.gcn = GraphNeuralNet(self.nfeat, nhid, self.nclass, dropout)
+        self.gcn = GraphNeuralNet(self.nfeat, self.nhid, self.nclass, dropout)
         idx_train = range(140)
         idx_val = range(200, 500)
         idx_test = range(500, 1500)
-        self.features = torch.FloatTensor(np.array(self.features.todense()))
+        self.features = torch.FloatTensor(np.array(self.features))
         self.adjacency = sp.coo_matrix(self.adjacency)
         self.adjacency = (self.adjacency + sp.eye(self.adjacency.shape[0]))
         self.D = np.diag(self.adjacency.sum(axis=1))

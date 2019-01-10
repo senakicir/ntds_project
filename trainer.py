@@ -7,7 +7,6 @@ from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
 import torch.optim as optim
 import scipy.sparse as sp
-from models import GCN
 from error import accuracy_prob
 from graph_analysis import Our_Graph
 
@@ -64,4 +63,3 @@ class Trainer():
         print("Test set results:",
               "loss= {:.4f}".format(loss_test.item()),
               "accuracy= {:.4f}".format(acc_test.item()))
-
