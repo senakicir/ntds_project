@@ -72,10 +72,9 @@ class GraphNeuralNet(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 class GCN():
-    def __init__(self, nhid, dropout, adjacency, features, D_norm, labels, cuda=True, lr=0.01, weight_decay=5e-4, epochs=100):
+    def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, lr=0.01, weight_decay=5e-4, epochs=100):
         self.adjacency = adjacency
         self.features = features
-        self.D_norm = D_norm
         self.labels = labels
         self.nfeat = features.shape[-1]
         self.nhid = nhid
@@ -87,7 +86,10 @@ class GCN():
         idx_test = range(500, 1500)
         self.features = torch.FloatTensor(np.array(self.features))
         self.adjacency = sp.coo_matrix(self.adjacency)
-        self.adjacency = self.D_norm @ (self.adjacency + sp.eye(self.adjacency.shape[0])) @ D_norm
+        self.adjacency = (self.adjacency + sp.eye(self.adjacency.shape[0]))
+        self.D = np.diag(self.adjacency.sum(axis=1))
+        self.D_norm = torch.FloatTensor(np.power(np.linalg.inv(self.D), 0.5))
+        self.adjacency = self.D_norm @ (self.adjacency + sp.eye(self.adjacency.shape[0])) @ self.D_norm
         self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
         self.labels = torch.LongTensor(np.where(self.labels)[1])
         self.idx_train = torch.LongTensor(idx_train)

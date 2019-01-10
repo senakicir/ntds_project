@@ -57,7 +57,7 @@ class Trainer():
 
     def test(self, idx_test):
         self.model.eval()
-        output = self.model(self.features, self.adjaceny)
+        output = self.model(self.features, self.adjacency)
         loss_test = F.nll_loss(output[idx_test], self.labels[idx_test])
         acc_test = accuracy_prob(output[idx_test], self.labels[idx_test])
         print("Test set results:",
