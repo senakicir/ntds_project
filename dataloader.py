@@ -129,7 +129,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     print("Features,labels,and genres saved using prefix: {}".format(name[:len(name)-1]))
     return name
 
-def load_features_labels_adjacency(name):
+def load_features_labels_adjacency(name,plot_graph=False):
     assert os.path.exists("dataset_saved_numpy/" + name + "features.npy")
     assert os.path.exists("dataset_saved_numpy/" + name + "adjacency.npy")
     assert os.path.exists("dataset_saved_numpy/labels.npy")
@@ -144,9 +144,6 @@ def load_features_labels_adjacency(name):
     genres_classes = np.load("dataset_saved_numpy/genres_classes.npy")
 
     pygsp_graph = pg.graphs.Graph(adjacency, lap_type = 'normalized')
-    #pygsp_graph.set_coordinates('spring') #for visualization
+    if plot_graph:
+        pygsp_graph.set_coordinates('spring') #for visualization
     return features, labels,labels_onehot,genres_classes, adjacency, pygsp_graph
-
-# if __name__ == "__main__":
-#     name1 = save_features_labels_adjacency(normalize_features = False, use_PCA = False, rem_outliers= False,genres = ['Hip-Hop', 'Rock'])
-#     name2 = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False,genres = ['Hip-Hop', 'Rock'])

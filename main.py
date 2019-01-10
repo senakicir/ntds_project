@@ -21,6 +21,8 @@ parser.add_argument('--only-features', action='store_true',
                     help="Calculate features only (Default:False)")
 parser.add_argument('--recalculate-features', action='store_true',
                     help="Calculate features before running classification (Default:False)")
+parser.add_argument('--plot-graph', action='store_true',
+                    help="Plot Graph (Default:False)")
 parser.add_argument('--genres', default=None, nargs='+', type=str,
                     help="list of genre used(Default: None)")
 parser.add_argument('--num-classes', type=int, default=None,
@@ -51,11 +53,13 @@ def run_demo(args):
     eigenmaps_name = "eigenmaps_"
 
     print("Loading features, labels, and adjacency")
-    features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name)
-    features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
+    features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
+    features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
     print("Genres that will be used: {}".format(genres))
-    #plot_gt_labels(pygsp_graph, gt_labels, default_name)
-    #plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
+
+    if args.plot_graph:
+        plot_gt_labels(pygsp_graph, gt_labels, default_name)
+        plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
     D = np.diag(adjacency.sum(axis=1))
     D_norm = np.power(np.linalg.inv(D), 0.5)
