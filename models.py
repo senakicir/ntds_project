@@ -1,14 +1,25 @@
 import numpy as np
 import pdb
 import math
+import scipy.sparse as sp
 import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
-
 import sklearn.svm as svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KNeighborsClassifier
+from trainer import Trainer
+
+
+def sparse_mx_to_torch_sparse_tensor(sparse_mx):
+    """Convert a scipy sparse matrix to a torch sparse tensor."""
+    sparse_mx = sparse_mx.tocoo().astype(np.float32)
+    indices = torch.from_numpy(
+        np.vstack((sparse_mx.row, sparse_mx.col)).astype(np.int64))
+    values = torch.from_numpy(sparse_mx.data)
+    shape = torch.Size(sparse_mx.shape)
+    return torch.sparse.FloatTensor(indices, values, shape)
 
 class GraphConvolution(Module):
     """
@@ -45,8 +56,8 @@ class GraphConvolution(Module):
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
 
-class GCN(torch.nn.Module):
-    def __init__(self, nfeat, nhid=100, nclass=2, dropout=0.5):
+class GraphNeuralNet(torch.nn.Module):
+    def __init__(self, nfeat, nhid, nclass, dropout):
         super(GCN, self).__init__()
 
         self.gc1 = GraphConvolution(nfeat, nhid)
@@ -58,6 +69,39 @@ class GCN(torch.nn.Module):
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.gc2(x, adj)
         return F.log_softmax(x, dim=1)
+
+class GCN():
+    def __init__(self, nfeat, nhid, nclass, dropout, adjacency, features, D_norm, labels, cuda=True, lr=0.01, weight_decay=5e-4, epochs=100):
+        self.adjacency = adjacency
+        self.features = features
+        self.D_norm = D_norm
+        self.labels = labels
+        self.nfeat = nfeat
+        self.nhid = nhid
+        self.nclass = nclass
+        self.epochs = epochs
+        self.gcn = GraphNeuralNet(nfeat, nhid, nclass, dropout)
+        idx_train = range(140)
+        idx_val = range(200, 500)
+        idx_test = range(500, 1500)
+        self.features = torch.FloatTensor(np.array(self.features.todense()))
+        self.adjacency = sp.coo_matrix(self.adjacency)
+        self.adjacency = self.D_norm @ (self.adjacency + sp.eye(self.adjacency.shape[0])) @ D_norm
+        self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
+        self.labels = torch.LongTensor(np.where(self.labels)[1])
+        self.idx_train = torch.LongTensor(idx_train)
+        self.idx_val = torch.LongTensor(idx_val)
+        self.idx_test = torch.LongTensor(idx_test)
+
+        #Create trainer
+        self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, lr, weight_decay)
+
+    def train(self, idx_train, idx_test):
+        for epoch in range(self.epochs):
+            self.trainer.train(epoch, idx_train, idx_test)
+
+    def classify(self, idx_test):
+        self.trainer.test(idx_test)
 
 class SVM():
     def __init__(self,kernel,poly_degree=3):

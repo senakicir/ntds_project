@@ -22,6 +22,9 @@ def run_demo():
     plot_gt_labels(pygsp_graph, gt_labels, default_name)
     plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
+    D = np.diag(adjacency.sum(axis=1))
+    D_norm = np.power(np.linalg.inv(D), 0.5)
+
     #our_graph = Our_Graph(adjacency_pca)
     #features_lap = our_graph.get_laplacian_eigenmaps()
     features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
@@ -35,7 +38,7 @@ def run_demo():
     svm_clf = SVM(kernel='poly')
     random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2)
     knn_clf = KNN()
-    gnn = GCN(nfeat=features_pca.shape[-1], nhid=100, nclass=gt_labels.shape[-1], dropout=0.1)
+    gnn = GCN(nfeat=features_pca.shape[-1], nhid=100, nclass=gt_labels.shape[-1], dropout=0.1, adjacency= adjacency, features=features, D_norm=D_norm, labels=gt_labels, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 100)
 
     print('############## Normal Adjacency ##############')
     mean_error_svm, std_error_svm = cross_validation(features, gt_labels, svm_clf, K=5, name=default_name+"svm_")
