@@ -32,6 +32,7 @@ The different arguments that can be passed to `main.py`:
 - `--genres` : List of genres used for classification (Default: None)
 - `--num-classes` : Number of classes randomly chosen for classification (Default: None)
 - `--threshold` : Threshold for the weights of edges (Default: 0.66)
+- `--plot-graph`: Plot the Graph using PyGSP (Default: False)
 
 To only calculate and save the features and labels with default arguments:
 ```
