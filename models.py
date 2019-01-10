@@ -81,7 +81,7 @@ class GCN():
         self.nhid = nhid
         self.nclass = labels.shape[-1]
         self.epochs = epochs
-        self.gcn = GraphNeuralNet(nfeat, nhid, nclass, dropout)
+        self.gcn = GraphNeuralNet(self.nfeat, self.nhid, self.nclass, dropout)
         idx_train = range(140)
         idx_val = range(200, 500)
         idx_test = range(500, 1500)
