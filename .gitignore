@@ -4,3 +4,4 @@ dataset
 .ipynb_checkpoints
 .tox
 .DS_Store
+*.pyc

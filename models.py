@@ -61,7 +61,7 @@ class GCN(torch.nn.Module):
 
 class SVM():
     def __init__(self,kernel,poly_degree=3):
-        if kernel = 'linear':
+        if kernel == 'linear':
             self.clf = svm.LinearSVC(multi_class='ovr') # Can use 'crammer_singer’ but more expensive while not that much better accuracy(only more stable)
         else:
             self.clf = svm.SVC(gamma='auto', kernel=kernel,degree=poly_degree,decision_function_shape='ovr')
@@ -69,7 +69,7 @@ class SVM():
     def train(self, features_tr, labels_tr):
         self.clf.fit(features_tr, labels_tr)
 
-    def evaluate(self, features_test):
+    def classify(self, features_test):
         return self.clf.predict(features_test)
 
     def accuracy(self, features_test, labels_test):
@@ -96,7 +96,7 @@ class K_Means():
     def train(self, features_tr,labels_tr):
         self.clusters = self.clf.fit_predict(features_tr)
 
-    def evaluate(self, features_test):
+    def classify(self, features_test):
         return self.clf.predict(features_test)
 
 class Random_Forest():
@@ -106,8 +106,8 @@ class Random_Forest():
 
     def train(self, features_tr, labels_tr):
         self.clf.fit(features_tr,labels_tr)
-    def evaluate(self, features_test):
-        return self.clf.predict(features_tr,labels_tr)
+    def classify(self, features_test):
+        return self.clf.predict(features_test)
     def accuracy(self, features_test, labels_test):
         return self.clf.score(features_test,labels_test)
     def reset(self, new_n_est, new_max_depth):

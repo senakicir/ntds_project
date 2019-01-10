@@ -11,6 +11,8 @@ from graph_analysis import Our_Graph
 from trainer import Trainer
 from evaluate import cross_validation, grid_search_for_param
 
+from sklearn.manifold import spectral_embedding
+SEED = 0
 def run_demo():
     default_name = ""
     pca_name = "normalized_PCA_"
@@ -22,11 +24,19 @@ def run_demo():
 
     #our_graph = Our_Graph(adjacency_pca)
     #features_lap = our_graph.get_laplacian_eigenmaps()
+    features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
+                       random_state=SEED, eigen_tol=0.0,
+                       norm_laplacian=True)
 
-    svm_clf = SVM()
-    random_forest_clf = Random_Forest()
+    features_lap_pca = spectral_embedding(adjacency_pca ,n_components=10, eigen_solver=None,
+                       random_state=SEED, eigen_tol=0.0,
+                       norm_laplacian=True)
+
+    svm_clf = SVM(kernel='poly')
+    random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2)
     knn_clf = KNN()
 
+    print('############## Normal Adjacency ##############')
     mean_error_svm, std_error_svm = cross_validation(features, gt_labels, svm_clf, K=5, name=default_name+"svm_")
     print('SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
@@ -35,8 +45,9 @@ def run_demo():
 
     mean_error_knn, std_error_knn = cross_validation(features, gt_labels, knn_clf, K=5, name=default_name+"knn_")
     print('KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+    print('')
 
-#########
+    print('############## Normalized + PCA ##############')
 
     mean_error_svm, std_error_svm = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name+"svm_")
     print('Normalized, PCA, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
@@ -46,7 +57,30 @@ def run_demo():
 
     mean_error_knn, std_error_knn = cross_validation(features_pca, gt_labels, knn_clf, K=5, name=pca_name+"knn_")
     print('Normalized, PCA, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+    print('')
 
+    print('############## Using Eigenmaps ##############')
+
+    mean_error_svm, std_error_svm = cross_validation(features_lap, gt_labels, svm_clf, K=5, name=default_name+"svm_")
+    print('Eigenmaps,SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+
+    mean_error_rf, std_error_rf = cross_validation(features_lap, gt_labels, random_forest_clf, K=5, name=default_name+"rf_")
+    print('Eigenmaps,Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+
+    mean_error_knn, std_error_knn = cross_validation(features_lap, gt_labels, knn_clf, K=5, name=default_name+"knn_")
+    print('Eigenmaps,KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+    print('')
+
+    print('############## Using Eigenmaps + Normalized + PCA ##############')
+
+    mean_error_svm, std_error_svm = cross_validation(features_lap_pca, gt_labels, svm_clf, K=5, name=pca_name+"svm_")
+    print('Normalized, PCA,Eigenmaps, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+
+    mean_error_rf, std_error_rf = cross_validation(features_lap_pca, gt_labels, random_forest_clf, K=5, name=pca_name+"rf_")
+    print('Normalized, PCA,Eigenmaps, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+
+    mean_error_knn, std_error_knn = cross_validation(features_lap_pca, gt_labels, knn_clf, K=5, name=pca_name+"knn_")
+    print('Normalized, PCA,Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
 
 def run_grid_search_for_optimal_param():
     pca_name = "normalized_PCA_"
@@ -127,4 +161,3 @@ def lol():
         predicted_classes_svm_pca = svm_pca_clf.classify(features_pca_test)
         plot_confusion_matrix(predicted_classes_svm_pca, gt_labels_test, ['Hip-Hop', 'Rock'], pca_name)
         print('SVM + PCA Percentage Error: {:.2f}'.format(error_func(gt_labels_test, predicted_classes_svm_pca)))
-
