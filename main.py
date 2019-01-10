@@ -73,7 +73,7 @@ def run_demo(args):
     svm_clf = SVM(kernel='poly',seed=SEED)
     random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2,seed=SEED)
     knn_clf = KNN()
-    gnn = GCN(nfeat=features_pca.shape[-1], nhid=100, nclass=gt_labels_onehot.shape[-1], dropout=0.1, adjacency= adjacency, features=features, D_norm=D_norm, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 100)
+    gnn = GCN(nhid=100, dropout=0.1, adjacency= adjacency, features=features, D_norm=D_norm, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 100)
     pdb.set_trace()
     print('############## Normal Adjacency ##############')
     mean_error_svm, std_error_svm = cross_validation(features, gt_labels, svm_clf, K=5,classes=genres, name=default_name+"svm_")
