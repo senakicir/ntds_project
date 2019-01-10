@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import ast
+import scipy.sparse as sp
 from scipy.spatial.distance import pdist, squareform
 import pdb
 import pygsp as pg

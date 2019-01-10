@@ -5,7 +5,7 @@ import pdb
 from dataloader import *
 from utils import *
 from visualization import *
-from models import SVM, Random_Forest, KNN
+from models import SVM, Random_Forest, KNN, GCN
 from error import error_func
 from graph_analysis import Our_Graph
 from trainer import Trainer
@@ -17,7 +17,7 @@ def run_demo():
     default_name = ""
     pca_name = "normalized_PCA_"
 
-    features, gt_labels, adjacency, pygsp_graph = load_features_labels_adjacency(default_name)
+    features_pca, gt_labels, adjacency, pygsp_graph = load_features_labels_adjacency(default_name)
     features_pca, gt_labels, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
     plot_gt_labels(pygsp_graph, gt_labels, default_name)
     plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
@@ -35,6 +35,7 @@ def run_demo():
     svm_clf = SVM(kernel='poly')
     random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2)
     knn_clf = KNN()
+    gnn = GCN(nfeat=features_pca.shape[-1], nhid=100, nclass=gt_labels.shape[-1], dropout=0.1)
 
     print('############## Normal Adjacency ##############')
     mean_error_svm, std_error_svm = cross_validation(features, gt_labels, svm_clf, K=5, name=default_name+"svm_")
