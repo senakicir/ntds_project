@@ -10,11 +10,15 @@ Include logo/demo screenshot etc.
 ## Features
 What makes your project stand out?
 
-## Dependencies
+## Main Dependencies
 - Python3.7
+- PyGSP
+- Networkx
 - PyTorch
 - Numpy
-- sklearn
+- Sklearn
+- Pandas
+- Matplotlib
 
 ## Installation
 Clone this repository and install all required packages.
