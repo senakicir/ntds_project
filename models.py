@@ -58,7 +58,7 @@ class GraphConvolution(Module):
 
 class GraphNeuralNet(torch.nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout):
-        super(GCN, self).__init__()
+        super(GraphNeuralNet, self).__init__()
 
         self.gc1 = GraphConvolution(nfeat, nhid)
         self.gc2 = GraphConvolution(nhid, nclass)
@@ -117,7 +117,7 @@ class SVM():
         return self.clf.predict(features_test)
 
     def accuracy(self, features_test, labels_test):
-        return self.ctf.score(features_test,labels_test)
+        return self.clf.score(features_test,labels_test)
 
 class KNN():
     def __init__(self):
