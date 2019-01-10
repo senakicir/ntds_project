@@ -81,11 +81,14 @@ class GCN():
         self.nclass = labels.shape[-1]
         self.epochs = epochs
         self.gcn = GraphNeuralNet(self.nfeat, self.nhid, self.nclass, dropout)
-        idx_train = range(1500)
-        idx_val = range(1500, 1750)
-        idx_test = range(1750, 2000)
+
+        #Train-val-test split
+        idxs = np.random.permutation(np.arange(features.shape[0]))
+        idx_train = idxs[:int(features.shape[0]*0.60)]
+        idx_val = idxs[int(features.shape[0]*0.60): int(features.shape[0]*0.60) + int(features.shape[0]*0.20)]
+        idx_test = idxs[int(features.shape[0]*0.60) + int(features.shape[0]*0.20):]
+
         self.features = torch.FloatTensor(np.array(self.features))
-        #
         self.adjacency = (self.adjacency + np.eye(self.adjacency.shape[0]))
         self.D = np.diag(self.adjacency.sum(axis=1))
         self.D_norm = (np.power(np.linalg.inv(self.D), 0.5))

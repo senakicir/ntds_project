@@ -19,10 +19,10 @@ def error_func(gt_labels, pred_labels):
     error_rate = (errors/gt_labels.shape[0]) * 100
     return error_rate
 
-def accuracy_prob(gt, pred):
+def accuracy_prob(pred, gt):
     #When the prediction has probabilities for each class and
     #the gt keep the location of the true class use this function.
     pred = pred.max(1)[1].type_as(gt)
     acc = pred.eq(gt).double()
-    acc_rate = (acc / gt.shape[0]) * 100
+    acc_rate = (acc.sum() / gt.shape[0]) * 100
     return acc_rate
