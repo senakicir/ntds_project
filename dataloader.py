@@ -144,7 +144,7 @@ def load_features_labels_adjacency(name):
     genres_classes = np.load("dataset_saved_numpy/genres_classes.npy")
 
     pygsp_graph = pg.graphs.Graph(adjacency, lap_type = 'normalized')
-    pygsp_graph.set_coordinates('spring') #for visualization
+    #pygsp_graph.set_coordinates('spring') #for visualization
     return features, labels,labels_onehot,genres_classes, adjacency, pygsp_graph
 
 # if __name__ == "__main__":

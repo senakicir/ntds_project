@@ -81,15 +81,16 @@ class GCN():
         self.nclass = labels.shape[-1]
         self.epochs = epochs
         self.gcn = GraphNeuralNet(self.nfeat, self.nhid, self.nclass, dropout)
-        idx_train = range(140)
-        idx_val = range(200, 500)
-        idx_test = range(500, 1500)
+        idx_train = range(1500)
+        idx_val = range(1500, 1750)
+        idx_test = range(1750, 2000)
         self.features = torch.FloatTensor(np.array(self.features))
-        self.adjacency = sp.coo_matrix(self.adjacency)
-        self.adjacency = (self.adjacency + sp.eye(self.adjacency.shape[0]))
+        #
+        self.adjacency = (self.adjacency + np.eye(self.adjacency.shape[0]))
         self.D = np.diag(self.adjacency.sum(axis=1))
-        self.D_norm = torch.FloatTensor(np.power(np.linalg.inv(self.D), 0.5))
-        self.adjacency = self.D_norm @ (self.adjacency + sp.eye(self.adjacency.shape[0])) @ self.D_norm
+        self.D_norm = (np.power(np.linalg.inv(self.D), 0.5))
+        self.adjacency = self.D_norm @ (self.adjacency) @ self.D_norm
+        self.adjacency = sp.coo_matrix(self.adjacency)
         self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
         self.labels = torch.LongTensor(np.where(self.labels)[1])
         self.idx_train = torch.LongTensor(idx_train)
@@ -99,12 +100,12 @@ class GCN():
         #Create trainer
         self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, lr, weight_decay)
 
-    def train(self, idx_train, idx_test):
+    def train(self):
         for epoch in range(self.epochs):
-            self.trainer.train(epoch, idx_train, idx_test)
+            self.trainer.train(epoch, self.idx_train, self.idx_val)
 
-    def classify(self, idx_test):
-        self.trainer.test(idx_test)
+    def classify(self):
+        self.trainer.test(self.idx_test)
 
 class SVM():
     def __init__(self,kernel,poly_degree=3,seed=0):
