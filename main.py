@@ -1,8 +1,9 @@
 import numpy as np
 import pygsp as pg
 import pdb
+import sys
+import argparse
 
-from dataloader import *
 from utils import *
 from visualization import *
 from models import SVM, Random_Forest, KNN, GCN
@@ -12,13 +13,47 @@ from trainer import Trainer
 from evaluate import cross_validation, grid_search_for_param
 
 from sklearn.manifold import spectral_embedding
+from dataloader import save_features_labels_adjacency, load_features_labels_adjacency
+
 SEED = 0
-def run_demo():
+parser = argparse.ArgumentParser(description='Train image model with cross entropy loss')
+parser.add_argument('--only-features', action='store_true',
+                    help="Calculate features only (Default:False)")
+parser.add_argument('--recalculate-features', action='store_true',
+                    help="Calculate features before running classification(Default:False)")
+parser.add_argument('--genres', default=None, nargs='+', type=str,
+                    help="list of genre used(Default: None)")
+parser.add_argument('--num-classes', type=int, default=None,
+                    help="number of random genres(Default:Use list from --genres)")
+parser.add_argument('--threshold', type=int, default=0.66,
+                    help="Threshold for cutting weight (Default:0.66)")
+
+def run_demo(args):
+    args = parser.parse_args(args)
+    np.random.seed(SEED)
+    if args.recalculate_features or args.only_features:
+        print("Calculating Features ...")
+        if not(args.genres is None) and len(args.genres)>0:
+            num_classes = None
+        else:
+            num_classes = args.num_classes
+
+        save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric="correlation",
+                                       use_features=['mfcc'], dataset_size='small', genres=args.genres, num_classes=num_classes)
+
+        save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric="correlation",
+                                       use_features=['mfcc'], dataset_size='small', genres=args.genres, num_classes=num_classes)
+        if args.only_features:
+            return
+
     default_name = ""
     pca_name = "normalized_PCA_"
+    eigenmaps_name = "eigenmaps_"
 
-    features_pca, gt_labels, adjacency, pygsp_graph = load_features_labels_adjacency(default_name)
-    features_pca, gt_labels, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
+    print("Loading features, labels, and adjacency")
+    features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name)
+    features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
+    print("Genres that will be used: {}".format(genres))
     plot_gt_labels(pygsp_graph, gt_labels, default_name)
     plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
@@ -32,70 +67,70 @@ def run_demo():
                        random_state=SEED, eigen_tol=0.0,
                        norm_laplacian=True)
 
-    svm_clf = SVM(kernel='poly')
-    random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2)
+    svm_clf = SVM(kernel='poly',seed=SEED)
+    random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2,seed=SEED)
     knn_clf = KNN()
-    gnn = GCN(nfeat=features_pca.shape[-1], nhid=100, nclass=gt_labels.shape[-1], dropout=0.1)
+    #nn = GCN(nfeat=features_pca.shape[-1], nhid=100, nclass=gt_labels_onehot.shape[-1], dropout=0.1)
 
     print('############## Normal Adjacency ##############')
-    mean_error_svm, std_error_svm = cross_validation(features, gt_labels, svm_clf, K=5, name=default_name+"svm_")
+    mean_error_svm, std_error_svm = cross_validation(features, gt_labels, svm_clf, K=5,classes=genres, name=default_name+"svm_")
     print('SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
-    mean_error_rf, std_error_rf = cross_validation(features, gt_labels, random_forest_clf, K=5, name=default_name+"rf_")
+    mean_error_rf, std_error_rf = cross_validation(features, gt_labels, random_forest_clf, K=5,classes=genres, name=default_name+"rf_")
     print('Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
-    mean_error_knn, std_error_knn = cross_validation(features, gt_labels, knn_clf, K=5, name=default_name+"knn_")
+    mean_error_knn, std_error_knn = cross_validation(features, gt_labels, knn_clf, K=5,classes=genres, name=default_name+"knn_")
     print('KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
     print('')
 
     print('############## Normalized + PCA ##############')
 
-    mean_error_svm, std_error_svm = cross_validation(features_pca, gt_labels, svm_clf, K=5, name=pca_name+"svm_")
+    mean_error_svm, std_error_svm = cross_validation(features_pca, gt_labels, svm_clf, K=5,classes=genres, name=pca_name+"svm_")
     print('Normalized, PCA, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
-    mean_error_rf, std_error_rf = cross_validation(features_pca, gt_labels, random_forest_clf, K=5, name=pca_name+"rf_")
+    mean_error_rf, std_error_rf = cross_validation(features_pca, gt_labels, random_forest_clf, K=5,classes=genres, name=pca_name+"rf_")
     print('Normalized, PCA, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
-    mean_error_knn, std_error_knn = cross_validation(features_pca, gt_labels, knn_clf, K=5, name=pca_name+"knn_")
+    mean_error_knn, std_error_knn = cross_validation(features_pca, gt_labels, knn_clf, K=5,classes=genres, name=pca_name+"knn_")
     print('Normalized, PCA, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
     print('')
 
     print('############## Using Eigenmaps ##############')
 
-    mean_error_svm, std_error_svm = cross_validation(features_lap, gt_labels, svm_clf, K=5, name=default_name+"svm_")
+    mean_error_svm, std_error_svm = cross_validation(features_lap, gt_labels, svm_clf, K=5,classes=genres, name=default_name+eigenmaps_name+"svm_")
     print('Eigenmaps,SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
-    mean_error_rf, std_error_rf = cross_validation(features_lap, gt_labels, random_forest_clf, K=5, name=default_name+"rf_")
+    mean_error_rf, std_error_rf = cross_validation(features_lap, gt_labels, random_forest_clf, K=5,classes=genres, name=default_name+eigenmaps_name+"rf_")
     print('Eigenmaps,Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
-    mean_error_knn, std_error_knn = cross_validation(features_lap, gt_labels, knn_clf, K=5, name=default_name+"knn_")
+    mean_error_knn, std_error_knn = cross_validation(features_lap, gt_labels, knn_clf, K=5,classes=genres, name=default_name+eigenmaps_name+"knn_")
     print('Eigenmaps,KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
     print('')
 
     print('############## Using Eigenmaps + Normalized + PCA ##############')
 
-    mean_error_svm, std_error_svm = cross_validation(features_lap_pca, gt_labels, svm_clf, K=5, name=pca_name+"svm_")
+    mean_error_svm, std_error_svm = cross_validation(features_lap_pca, gt_labels, svm_clf, K=5,classes=genres, name=pca_name+eigenmaps_name+"svm_")
     print('Normalized, PCA,Eigenmaps, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
-    mean_error_rf, std_error_rf = cross_validation(features_lap_pca, gt_labels, random_forest_clf, K=5, name=pca_name+"rf_")
+    mean_error_rf, std_error_rf = cross_validation(features_lap_pca, gt_labels, random_forest_clf, K=5,classes=genres, name=pca_name+eigenmaps_name+"rf_")
     print('Normalized, PCA,Eigenmaps, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
-    mean_error_knn, std_error_knn = cross_validation(features_lap_pca, gt_labels, knn_clf, K=5, name=pca_name+"knn_")
+    mean_error_knn, std_error_knn = cross_validation(features_lap_pca, gt_labels, knn_clf, K=5,classes=genres, name=pca_name+eigenmaps_name+"knn_")
     print('Normalized, PCA,Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
 
 def run_grid_search_for_optimal_param():
     pca_name = "normalized_PCA_"
-    features_pca, gt_labels, adjacency_pca, adjacency_pg_pca = load_features_labels_adjacency(pca_name)
+    features_pca, gt_labels, gt_labels_onehot,genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
 
-    svm_clf = SVM()
-    random_forest_clf = Random_Forest()
+    svm_clf = SVM(kernel='poly',seed=SEED)
+    random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2,seed=SEED)
     knn_clf = KNN()
 
     #grid_search_for_param(features_pca, gt_labels, knn_clf, "KNN", K=5, name=pca_name) #ran it and found 42
-    grid_search_for_param(features_pca, gt_labels, random_forest_clf, "Random_Forest", K=5, name=pca_name)
+    grid_search_for_param(features_pca, gt_labels, random_forest_clf, "Random_Forest",classes=genres, K=5, name=pca_name)
 
 if __name__ == "__main__":
-    run_demo()
+    run_demo(sys.argv[1:])
 
 
 #THIS FUNCTION WILL BE USELESS SOON BUT DO NOT DELETE

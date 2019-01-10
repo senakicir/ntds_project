@@ -60,11 +60,11 @@ class GCN(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 class SVM():
-    def __init__(self,kernel,poly_degree=3):
+    def __init__(self,kernel,poly_degree=3,seed=0):
         if kernel == 'linear':
-            self.clf = svm.LinearSVC(multi_class='ovr') # Can use 'crammer_singer’ but more expensive while not that much better accuracy(only more stable)
+            self.clf = svm.LinearSVC(multi_class='ovr',random_state=seed) # Can use 'crammer_singer’ but more expensive while not that much better accuracy(only more stable)
         else:
-            self.clf = svm.SVC(gamma='auto', kernel=kernel,degree=poly_degree,decision_function_shape='ovr')
+            self.clf = svm.SVC(gamma='auto', kernel=kernel,degree=poly_degree,decision_function_shape='ovr',random_state=seed)
 
     def train(self, features_tr, labels_tr):
         self.clf.fit(features_tr, labels_tr)
