@@ -5,6 +5,7 @@ import scipy.sparse as sp
 import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
+import torch.nn.functional as F
 import sklearn.svm as svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
@@ -71,14 +72,14 @@ class GraphNeuralNet(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 class GCN():
-    def __init__(self, nfeat, nhid, nclass, dropout, adjacency, features, D_norm, labels, cuda=True, lr=0.01, weight_decay=5e-4, epochs=100):
+    def __init__(self, nhid, dropout, adjacency, features, D_norm, labels, cuda=True, lr=0.01, weight_decay=5e-4, epochs=100):
         self.adjacency = adjacency
         self.features = features
         self.D_norm = D_norm
         self.labels = labels
-        self.nfeat = nfeat
+        self.nfeat = features.shape[-1]
         self.nhid = nhid
-        self.nclass = nclass
+        self.nclass = labels.shape[-1]
         self.epochs = epochs
         self.gcn = GraphNeuralNet(nfeat, nhid, nclass, dropout)
         idx_train = range(140)
