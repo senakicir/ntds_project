@@ -6,6 +6,7 @@ import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
 import torch.nn.functional as F
+from torch.nn import BatchNorm1d
 import sklearn.svm as svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
@@ -61,18 +62,23 @@ class GraphNeuralNet(torch.nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout):
         super(GraphNeuralNet, self).__init__()
 
-        self.gc1 = GraphConvolution(nfeat, nhid)
-        self.gc2 = GraphConvolution(nhid, nclass)
+        self.gc1 = GraphConvolution(nfeat, nhid[0])
+        self.bn1 = BatchNorm1d(nhid[0])
+        self.gc2 = GraphConvolution(nhid[0], nhid[1])
+        self.bn2 = BatchNorm1d(nhid[1])
+        self.gc3 = GraphConvolution(nhid[1], nclass)
         self.dropout = dropout
 
     def forward(self, x, adj):
-        x = F.relu(self.gc1(x, adj))
+        x = F.relu(self.bn1(self.gc1(x, adj)))
         x = F.dropout(x, self.dropout, training=self.training)
-        x = self.gc2(x, adj)
+        x = F.relu(self.bn2(self.gc2(x, adj)))
+        x = F.dropout(x, self.dropout, training=self.training)
+        x = self.gc3(x, adj)
         return F.log_softmax(x, dim=1)
 
 class GCN():
-    def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, lr=0.01, weight_decay=5e-4, epochs=100):
+    def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100):
         self.adjacency = adjacency
         self.features = features
         self.labels = labels
@@ -101,7 +107,7 @@ class GCN():
         self.idx_test = torch.LongTensor(idx_test)
 
         #Create trainer
-        self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, lr, weight_decay)
+        self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, regularization, lr, weight_decay)
 
     def train(self):
         for epoch in range(self.epochs):

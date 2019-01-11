@@ -14,12 +14,13 @@ from graph_analysis import Our_Graph
 
 
 class Trainer():
-    def __init__(self, model, adjacency, features, labels, cuda=True,lr=0.01, weight_decay=5e-4):
+    def __init__(self, model, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4):
         self.model = model
         self.adjacency = adjacency
         self.features = features
         self.labels = labels
         self.cuda = cuda
+        self.regularization = regularization
         self.lr = lr
         self.weight_decay = weight_decay
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
@@ -36,7 +37,14 @@ class Trainer():
         self.model.train()
         self.optimizer.zero_grad()
         output = self.model(self.features, self.adjacency)
-        loss_train = F.nll_loss(output[idx_train], self.labels[idx_train])
+        regularization_loss = 0
+        if self.regularization == 'l1':
+            for param in self.model.parameters():
+                regularization_loss += torch.sum(torch.abs(param))
+
+            loss_train = F.nll_loss(output[idx_train], self.labels[idx_train]) + 0.001*regularization_loss
+        else:
+            loss_train = F.nll_loss(output[idx_train], self.labels[idx_train])
         acc_train = accuracy_prob(output[idx_train], self.labels[idx_train])
         loss_train.backward()
         self.optimizer.step()

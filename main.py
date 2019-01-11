@@ -75,7 +75,7 @@ def run_demo(args):
     knn_clf = KNN()
     #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
     #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
-    gnn = GCN(nhid=750, dropout=0.3, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 500)
+    gnn = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500)
     print('##############GNN##############')
     gnn.train()
     gnn.classify()
