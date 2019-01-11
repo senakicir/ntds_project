@@ -61,11 +61,7 @@ def run_demo(args):
         plot_gt_labels(pygsp_graph, gt_labels, default_name)
         plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
-    D = np.diag(adjacency.sum(axis=1))
-    D_norm = np.power(np.linalg.inv(D), 0.5)
 
-    #our_graph = Our_Graph(adjacency_pca)
-    #features_lap = our_graph.get_laplacian_eigenmaps()
     features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
                        random_state=SEED, eigen_tol=0.0,
                        norm_laplacian=True)
@@ -77,7 +73,9 @@ def run_demo(args):
     svm_clf = SVM(kernel='poly',seed=SEED)
     random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2,seed=SEED)
     knn_clf = KNN()
-    gnn = GCN(nhid=100, dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 100)
+    #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
+    #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
+    gnn = GCN(nhid=750, dropout=0.3, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 500)
     print('##############GNN##############')
     gnn.train()
     gnn.classify()
