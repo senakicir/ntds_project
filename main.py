@@ -40,6 +40,9 @@ parser.add_argument('--dataset-size', type=str, default='small',
 def run_demo(args):
     args = parser.parse_args(args)
     np.random.seed(SEED)
+    default_name = ""
+    pca_name = "normalized_PCA_"
+    eigenmaps_name = "eigenmaps_"
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
         if not(args.genres is None) and len(args.genres)>0:
@@ -47,21 +50,20 @@ def run_demo(args):
         else:
             num_classes = args.num_classes
 
-        save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric=args.distance_metric,
-                                       use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes)
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric=args.distance_metric,
+                                       use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features)
 
-        save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric=args.distance_metric,
-                                       use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes)
+        features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric=args.distance_metric,
+                                       use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features)
         if args.only_features:
             return
+    else:
+        print("Loading features, labels, and adjacency")
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
+        features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
 
-    default_name = ""
-    pca_name = "normalized_PCA_"
-    eigenmaps_name = "eigenmaps_"
 
-    print("Loading features, labels, and adjacency")
-    features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
-    features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
+
     print("Genres that will be used: {}".format(genres))
 
     if args.plot_graph:

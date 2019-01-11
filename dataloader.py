@@ -100,7 +100,7 @@ def form_adjacency(features, threshold = 0.66, metric ='correlation'):
     assert num_of_disconnected_nodes == 0
     return adjacency
 
-def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None):
+def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False):
     tracks, features = csv_loader()
     #feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'], num_classes=num_classes)
     feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
@@ -127,6 +127,10 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     np.save("dataset_saved_numpy/genres_classes.npy", genres_classes)
     np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
     print("Features,labels,and genres saved using prefix: {}".format(name[:len(name)-1]))
+
+    if (return_features):
+        pygsp_graph = pg.graphs.Graph(adjacency, lap_type = 'normalized')
+        return feature_values, genres_gt,genres_gt_onehot,genres_classes, adjacency, pygsp_graph
     return name
 
 def load_features_labels_adjacency(name,plot_graph=False):
