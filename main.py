@@ -50,13 +50,16 @@ def run_demo(args):
         else:
             num_classes = args.num_classes
 
-        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric=args.distance_metric,
+        output = save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric=args.distance_metric,
                                        use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features)
 
-        features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric=args.distance_metric,
+        output_pca = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric=args.distance_metric,
                                        use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features)
         if args.only_features:
             return
+
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = output
+        features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = output_pca
     else:
         print("Loading features, labels, and adjacency")
         features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
