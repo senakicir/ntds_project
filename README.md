@@ -33,6 +33,8 @@ The different arguments that can be passed to `main.py`:
 - `--num-classes` : Number of classes randomly chosen for classification (Default: None)
 - `--threshold` : Threshold for the weights of edges (Default: 0.66)
 - `--plot-graph`: Plot the Graph using PyGSP (Default: False)
+- `--dataset-size`: Size of dataset used (Default: 'small')
+- `--distance-metric`: Metric used to measure distance between features (Default: 'correlation')
 
 To only calculate and save the features and labels with default arguments:
 ```

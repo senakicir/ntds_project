@@ -27,8 +27,15 @@ parser.add_argument('--genres', default=None, nargs='+', type=str,
                     help="list of genre used(Default: None)")
 parser.add_argument('--num-classes', type=int, default=None,
                     help="number of random genres(Default:Use list from --genres)")
-parser.add_argument('--threshold', type=int, default=0.66,
+parser.add_argument('--threshold', type=float, default=0.66,
                     help="Threshold for cutting weight (Default:0.66)")
+parser.add_argument('--distance-metric', type=str, default='correlation',
+                    choices=['braycurtis', 'canberra', 'chebyshev', 'cityblock', 'correlation',
+                    'cosine', 'dice', 'euclidean', 'hamming', 'jaccard', 'jensenshannon', 'kulsinski',
+                    'mahalanobis', 'matching', 'minkowski', 'rogerstanimoto', 'russellrao', 'seuclidean',
+                    'sokalmichener', 'sokalsneath', 'sqeuclidean', 'yule'])
+parser.add_argument('--dataset-size', type=str, default='small',
+                    choices=['small', 'medium', 'large'])
 
 def run_demo(args):
     args = parser.parse_args(args)
@@ -40,11 +47,11 @@ def run_demo(args):
         else:
             num_classes = args.num_classes
 
-        save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric="correlation",
-                                       use_features=['mfcc'], dataset_size='small', genres=args.genres, num_classes=num_classes)
+        save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric=args.distance_metric,
+                                       use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes)
 
-        save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric="correlation",
-                                       use_features=['mfcc'], dataset_size='small', genres=args.genres, num_classes=num_classes)
+        save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric=args.distance_metric,
+                                       use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes)
         if args.only_features:
             return
 
