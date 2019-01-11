@@ -5,6 +5,7 @@ import time
 import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
+import torch.nn.functional as F
 import torch.optim as optim
 import scipy.sparse as sp
 from error import accuracy_prob
@@ -15,19 +16,18 @@ from graph_analysis import Our_Graph
 class Trainer():
     def __init__(self, model, adjacency, features, labels, cuda=True,lr=0.01, weight_decay=5e-4):
         self.model = model
-        self.adjaceny = adjacency
+        self.adjacency = adjacency
         self.features = features
         self.labels = labels
         self.cuda = cuda
         self.lr = lr
         self.weight_decay = weight_decay
-        self.epochs = epochs
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
 
         if self.cuda:
             self.model.cuda()
             self.features = self.features.cuda()
-            self.adjaceny = self.adjacency.cuda()
+            self.adjacency = self.adjacency.cuda()
             self.labels = self.labels.cuda()
 
     def train(self, epoch, idx_train, idx_val):
@@ -35,8 +35,7 @@ class Trainer():
         #Training
         self.model.train()
         self.optimizer.zero_grad()
-        output = self.model(self.features, self.adjaceny)
-        acc_train = error_func(self.labels, self.output)
+        output = self.model(self.features, self.adjacency)
         loss_train = F.nll_loss(output[idx_train], self.labels[idx_train])
         acc_train = accuracy_prob(output[idx_train], self.labels[idx_train])
         loss_train.backward()
@@ -44,7 +43,7 @@ class Trainer():
 
         #Validation
         self.model.eval()
-        output = self.model(self.features, self.adjaceny)
+        output = self.model(self.features, self.adjacency)
         loss_val = F.nll_loss(output[idx_val], self.labels[idx_val])
         acc_val = accuracy_prob(output[idx_val], self.labels[idx_val])
 

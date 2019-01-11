@@ -63,15 +63,12 @@ def run_demo(args):
     features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
     features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
     print("Genres that will be used: {}".format(genres))
+
     if args.plot_graph:
         plot_gt_labels(pygsp_graph, gt_labels, default_name)
         plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
-    D = np.diag(adjacency.sum(axis=1))
-    D_norm = np.power(np.linalg.inv(D), 0.5)
 
-    #our_graph = Our_Graph(adjacency_pca)
-    #features_lap = our_graph.get_laplacian_eigenmaps()
     features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
                        random_state=SEED, eigen_tol=0.0,
                        norm_laplacian=True)
@@ -83,8 +80,12 @@ def run_demo(args):
     svm_clf = SVM(kernel='poly',seed=SEED)
     random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2,seed=SEED)
     knn_clf = KNN()
-    gnn = GCN(nhid=100, dropout=0.1, adjacency= adjacency, features=features, D_norm=D_norm, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 100)
-    pdb.set_trace()
+    #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
+    #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
+    gnn = GCN(nhid=750, dropout=0.3, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 500)
+    print('##############GNN##############')
+    gnn.train()
+    gnn.classify()
     print('############## Normal Adjacency ##############')
     mean_error_svm, std_error_svm = cross_validation(features, gt_labels, svm_clf, K=5,classes=genres, name=default_name+"svm_")
     print('SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))

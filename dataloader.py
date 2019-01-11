@@ -147,7 +147,3 @@ def load_features_labels_adjacency(name,plot_graph=False):
     if plot_graph:
         pygsp_graph.set_coordinates('spring') #for visualization
     return features, labels,labels_onehot,genres_classes, adjacency, pygsp_graph
-
-# if __name__ == "__main__":
-#     name1 = save_features_labels_adjacency(normalize_features = False, use_PCA = False, rem_outliers= False,genres = ['Hip-Hop', 'Rock'])
-#     name2 = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False,genres = ['Hip-Hop', 'Rock'])
