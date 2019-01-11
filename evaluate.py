@@ -7,27 +7,22 @@ from graph_analysis import Our_Graph
 from trainer import Trainer
 from sklearn.metrics import confusion_matrix
 
-def cross_validation(features, labels, model, classes, K=5, name = ""):
-    n_data = features.shape[0]
+
+def cross_validation(model, n_data, classes, K=5, name = ""):
     batch_size = n_data//K
 
     shuffled_ind = np.random.permutation(n_data)
-    shuffled_feat = features[shuffled_ind, :]
-    shuffled_labels = labels[shuffled_ind]
 
     errors = np.zeros([K,])
     confusion_matrices = np.zeros([K, len(classes), len(classes)])
     for k in range(K):
-        features_test = shuffled_feat[batch_size*k:batch_size*(k+1),:]
-        features_tr = np.concatenate([shuffled_feat[0:batch_size*k,:], shuffled_feat[batch_size*(k+1):-1,:]], axis=0)
+        idx_test = shuffled_ind[batch_size*k:batch_size*(k+1)]
+        idx_tr = np.concatenate([shuffled_ind[0:batch_size*k], shuffled_ind[batch_size*(k+1):-1]], axis=0)
 
-        gt_labels_test = shuffled_labels[batch_size*k:batch_size*(k+1)]
-        gt_labels_tr = np.concatenate([shuffled_labels[0:batch_size*k], shuffled_labels[batch_size*(k+1):-1]], axis=0)
-
-        model.train(features_tr, gt_labels_tr)
-        predicted_classes_svm = model.classify(features_test)
-        confusion_matrices[k, :, :] = confusion_matrix(gt_labels_test, predicted_classes_svm)
-        errors[k] = error_func(gt_labels_test, predicted_classes_svm)
+        model.train(idx_tr)
+        model.classify(idx_test)
+        #confusion_matrices[k, :, :] = confusion_matrix(gt_labels_test, predicted_classes)
+        errors[k] = model.accuracy()
         #print('Iter {0:d} Percentage Error: {1:.2f}'.format(k, errors[k]))
 
     mean_error = np.mean(errors)
