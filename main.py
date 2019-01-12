@@ -94,40 +94,46 @@ def run_demo(args):
         features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
                            random_state=SEED, eigen_tol=0.0,
                            norm_laplacian=True)
-
-        features_lap_pca = spectral_embedding(adjacency_pca ,n_components=10, eigen_solver=None,
-                           random_state=SEED, eigen_tol=0.0,
-                           norm_laplacian=True)
+        if args.with_PCA:
+            features_lap_pca = spectral_embedding(adjacency_pca ,n_components=10, eigen_solver=None,
+                               random_state=SEED, eigen_tol=0.0,
+                               norm_laplacian=True)
 
     svm_clf = SVM(features, gt_labels, kernel='poly',seed=SEED)
     random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
     knn_clf = KNN(features, gt_labels)
+    if args.with_PCA:
+        svm_clf_pca = SVM(features_pca, gt_labels, kernel='poly',seed=SEED)
+        random_forest_clf_pca = Random_Forest(features_pca, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
+        knn_clf_pca = KNN(features_pca, gt_labels)
 
-    svm_clf_pca = SVM(features_pca, gt_labels, kernel='poly',seed=SEED)
-    random_forest_clf_pca = Random_Forest(features_pca, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
-    knn_clf_pca = KNN(features_pca, gt_labels)
+    if args.use_eigenmaps:
+        svm_clf_lap = SVM(features_lap, gt_labels, kernel='poly', seed=SEED)
+        random_forest_clf_lap = Random_Forest(features_lap, gt_labels, n_estimators=1000, max_depth=2, seed=SEED)
+        knn_clf_lap = KNN(features_lap, gt_labels)
 
-    svm_clf_lap = SVM(features_lap, gt_labels, kernel='poly', seed=SEED)
-    random_forest_clf_lap = Random_Forest(features_lap, gt_labels, n_estimators=1000, max_depth=2, seed=SEED)
-    knn_clf_lap = KNN(features_lap, gt_labels)
-
-    svm_clf_lap_pca = SVM(features_lap_pca, gt_labels, kernel='poly', seed=SEED)
-    random_forest_clf_lap_pca = Random_Forest(features_lap_pca, gt_labels, n_estimators=1000, max_depth=2, seed=SEED)
-    knn_clf_lap_pca = KNN(features_lap_pca, gt_labels)
+        if args.with_PCA:
+            svm_clf_lap_pca = SVM(features_lap_pca, gt_labels, kernel='poly', seed=SEED)
+            random_forest_clf_lap_pca = Random_Forest(features_lap_pca, gt_labels, n_estimators=1000, max_depth=2, seed=SEED)
+            knn_clf_lap_pca = KNN(features_lap_pca, gt_labels)
 
     n_data = features.shape[0]
 
     #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
     #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
     if args.with_PCA:
-        gnn = GCN(nhid=750, dropout=0.3, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 500)
+        print('##############GNN##############')
+        gnn_clf_pca = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100)
+        #gnn.train()
+        #gnn.classify()
+        mean_error_gnn, std_error_gnn = cross_validation(gnn_clf_pca, n_data, K=5,classes=genres, name=pca_name+"gnn_")
     else:
-        gnn = GCN(nhid=750, dropout=0.3, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=True, lr=0.01, weight_decay = 5e-4, epochs = 500)
-    print('##############GNN##############')
-    gnn_clf_pca = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100)
-    #gnn.train()
-    #gnn.classify()
-    mean_error_gnn, std_error_gnn = cross_validation(gnn_clf_pca, n_data, K=5,classes=genres, name=default_name+"gnn_")
+        print('##############GNN##############')
+        gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100)
+        #gnn.train()
+        #gnn.classify()
+        mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=default_name+"gnn_")
+
     print('GNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 
 
