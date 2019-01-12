@@ -25,7 +25,7 @@ parser.add_argument('--plot-graph', action='store_true',
                     help="Plot Graph (Default:False)")
 parser.add_argument('--with-PCA', action='store_true',
                     help="Apply PCA to features (Default:False)")
-parser.add_argument('--with-eigenmaps', action='store_true',
+parser.add_argument('--use-eigenmaps', action='store_true',
                     help="Use eigenmaps (Default:False)")
 parser.add_argument('--genres', default=None, nargs='+', type=str,
                     help="list of genre used(Default: None)")
