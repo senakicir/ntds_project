@@ -9,6 +9,7 @@ from visualization import *
 from models import SVM, Random_Forest, KNN, GCN
 from error import error_func
 from graph_analysis import Our_Graph
+import graph_stats as gstats
 from trainer import Trainer
 from evaluate import cross_validation, grid_search_for_param
 
@@ -23,6 +24,8 @@ parser.add_argument('--recalculate-features', action='store_true',
                     help="Calculate features before running classification (Default:False)")
 parser.add_argument('--plot-graph', action='store_true',
                     help="Plot Graph (Default:False)")
+parser.add_argument('--graph_statistics', action='store_true',
+                    help="Report Graph Statistics (Default:False)")
 parser.add_argument('--with-PCA', action='store_true',
                     help="Apply PCA to features (Default:False)")
 parser.add_argument('--use-eigenmaps', action='store_true',
@@ -79,6 +82,13 @@ def run_demo(args):
     if args.plot_graph:
         plot_gt_labels(pygsp_graph, gt_labels, default_name)
         plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
+
+    if args.graph_statistics:
+        '''OKAN WAS HERE!'''
+        gstats.basic(adjacency)
+        if args.with_PCA:
+            gstats.basic(adjacency_pca)
+        return  # TODO: delete this when finished
 
     if args.use_eigenmaps:
         features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
