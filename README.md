@@ -35,7 +35,8 @@ The different arguments that can be passed to `main.py`:
 - `--plot-graph`: Plot the Graph using PyGSP (Default: False)
 - `--dataset-size`: Size of dataset used (Default: 'small')
 - `--distance-metric`: Metric used to measure distance between features (Default: 'correlation')
-
+- `--with-PCA`:
+- `--with-eigenmaps`:
 To only calculate and save the features and labels with default arguments:
 ```
 python main.py --only-features
