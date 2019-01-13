@@ -105,9 +105,9 @@ def run_demo(args):
                 gstats.allstats(adjacency, stat_dirname, active_plots=False)
         elif args.graph_statistics == 'advanced':
             if args.with_PCA:
-                gstats.advanced(adjacency_pca, stat_dirname, active_plots=True)
+                gstats.advanced(adjacency_pca, stat_dirname, active_plots=args.plot_graph)
             else:
-                gstats.advanced(adjacency, stat_dirname, active_plots=True)
+                gstats.advanced(adjacency, stat_dirname, active_plots=args.plot_graph)
         else:  # basic setting
             if args.with_PCA:
                 gstats.basic(adjacency_pca)
