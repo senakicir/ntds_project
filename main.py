@@ -205,7 +205,7 @@ def run_grid_search_for_optimal_param():
     grid_search_for_param(features_pca, gt_labels, random_forest_clf, "Random_Forest",classes=genres, K=5, name=pca_name)
 
 def transductive_learning(adjacency,labels,genres,n_data,name):
-    adjacency = sparse.lil_matrix(adjacency).tocsr()
+    adjacency = sparse.csr_matrix(adjacency)
 
     lgc = tr.LGC(graph=adjacency,y=labels,alpha=0.50,max_iter=30)
     hmn = tr.HMN(graph=adjacency,y=labels,max_iter=30)
