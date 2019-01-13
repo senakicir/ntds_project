@@ -26,7 +26,8 @@ parser.add_argument('--recalculate-features', action='store_true',
                     help="Calculate features before running classification (Default:False)")
 parser.add_argument('--plot-graph', action='store_true',
                     help="Plot Graph (Default:False)")
-parser.add_argument('--graph-statistics', action='store_true',
+parser.add_argument('--graph-statistics', type=str, default=None,
+                    choices=['basic', 'advanced', 'all'],
                     help="Report Graph Statistics (Default:False)")
 parser.add_argument('--with-PCA', action='store_true',
                     help="Apply PCA to features (Default:False)")
@@ -57,6 +58,7 @@ def run_demo(args):
     default_name = ""
     pca_name = "normalized_PCA_"
     eigenmaps_name = "eigenmaps_"
+    stat_dirname = "graph_stats"
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -93,14 +95,29 @@ def run_demo(args):
             plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
     if args.graph_statistics:
-        '''OKAN WAS HERE!'''
-        gstats.advanced(adjacency)
-        if args.with_PCA:
-            gstats.advanced(adjacency_pca)
-        return  # TODO: delete this when finished
+        if not os.path.exists(stat_dirname):
+            os.makedirs(stat_dirname)
 
-    gstats.growth_analysis(adjacency, release_dates, gt_labels)
-    return  # TODO: delete this when finished
+        if args.graph_statistics == 'all':
+            if args.with_PCA:
+                gstats.allstats(adjacency_pca, stat_dirname, active_plots=False)
+            else:
+                gstats.allstats(adjacency, stat_dirname, active_plots=False)
+        elif args.graph_statistics == 'advanced':
+            if args.with_PCA:
+                gstats.advanced(adjacency_pca, stat_dirname, active_plots=True)
+            else:
+                gstats.advanced(adjacency, stat_dirname, active_plots=True)
+        else:  # basic setting
+            if args.with_PCA:
+                gstats.basic(adjacency_pca)
+            else:
+                gstats.basic(adjacency)
+
+        if args.with_PCA:
+            gstats.growth_analysis(adjacency_pca, release_dates, gt_labels, stat_dirname)
+        else:
+            gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
 
     if args.transductive_learning:
         print('Applying Transductive Learning')
