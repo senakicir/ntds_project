@@ -130,7 +130,7 @@ class LGC(Base):
     """
 
     def __init__(self,graph,y,alpha=0.99,max_iter=30):
-        super(LGC, self).__init__(graph,y,max_iter=30)
+        super(LGC, self).__init__(graph,y,max_iter=max_iter)
         self.alpha=alpha
 
     def _build_propagation_matrix(self):
@@ -209,7 +209,7 @@ class PARW(Base):
     In Advances in Neural Information Processing Systems (pp. 3077-3085).
     """
     def __init__(self,graph,y,lamb=1.0,max_iter=30):
-        super(PARW, self).__init__(graph,y,max_iter=30)
+        super(PARW, self).__init__(graph,y,max_iter=max_iter)
         self.lamb=lamb
 
     def _build_propagation_matrix(self):
@@ -262,7 +262,7 @@ class MAD(Base):
     In Machine Learning and Knowledge Discovery in Databases (pp. 442-457). Springer Berlin Heidelberg.
     """
     def __init__(self,graph,y,mu=np.array([1.0,0.5,1.0]),beta=2.0,max_iter=30):
-        super(MAD, self).__init__(graph,y,max_iter=30)
+        super(MAD, self).__init__(graph,y,max_iter=max_iter)
         self.mu = mu
         self.beta = beta
 
@@ -349,7 +349,7 @@ class OMNIProp(Base):
     """
 
     def __init__(self,graph,y,lamb=1.0,max_iter=30):
-        super(OMNIProp,self).__init__(graph,y,max_iter)
+        super(OMNIProp,self).__init__(graph,y,max_iter=max_iter)
         self.lamb = lamb
 
     def _build_propagation_matrix(self):
@@ -406,12 +406,12 @@ class CAMLP(Base):
     """
 
     def __init__(self,graph,y,beta=0.1,H=None,max_iter=30):
-        super(CAMLP,self).__init__(graph,y,max_iter)
+        super(CAMLP,self).__init__(graph,y,max_iter=max_iter)
         self.beta=beta
         self.H=H
 
     def _arrange_params(self):
-        if self.H == None:
+        if self.H is None:
             n_classes = self.y_.max()+1
             self.H = np.identity(n_classes)
 
@@ -434,67 +434,3 @@ class CAMLP(Base):
         B[self.x_,self.y_] = 1
         Z = self._build_normalization_term()
         return Z.dot(B)
-
-def graph_pnorm_interpolation(gradient, P, w, labels_bin, x0=None, p=1., **kwargs):
-    r"""
-    Solve an interpolation problem via gradient p-norm minimization.
-
-    A signal :math:`x` is estimated from its measurements :math:`y = A(x)` by solving
-    :math:`\text{arg}\underset{z \in \mathbb{R}^n}{\min}
-    \| \nabla_G z \|_p^p \text{ subject to } Az = y`
-    via a primal-dual, forward-backward-forward algorithm.
-
-    Parameters
-    ----------
-    gradient : array_like
-        A matrix representing the graph gradient operator
-    P : callable
-        Orthogonal projection operator mapping points in :math:`z \in \mathbb{R}^n`
-        onto the set satisfying :math:`A P(z) = A z`.
-    x0 : array_like, optional
-        Initial point of the iteration. Must be of dimension n.
-        (Default is `numpy.random.randn(n)`)
-    p : {1., 2.}
-    labels_bin : array_like
-        A vector that holds the binary labels.
-    kwargs :
-        Additional solver parameters, such as maximum number of iterations
-        (maxit), relative tolerance on the objective (rtol), and verbosity
-        level (verbosity). See :func:`pyunlocbox.solvers.solve` for the full
-        list of options.
-
-    Returns
-    -------
-    x : array_like
-        The solution to the optimization problem.
-
-    """
-
-    grad = lambda z: gradient.dot(z)
-    div = lambda z: gradient.transpose().dot(z)
-
-    # Indicator function of the set satisfying :math:`y = A(z)`
-    f = functions.func()
-    f._eval = lambda z: 0
-    f._prox = lambda z, gamma: P(z, w, labels_bin)
-
-    # :math:`\ell_1` norm of the dual variable :math:`d = \nabla_G z`
-    g = functions.func()
-    g._eval = lambda z: np.sum(np.abs(grad(z)))
-    g._prox = lambda d, gamma: functions._soft_threshold(d, gamma)
-
-    # :math:`\ell_2` norm of the gradient (for the smooth case)
-    h = functions.norm_l2(A=grad, At=div)
-
-    stepsize = (0.9 / (1. + scipy.sparse.linalg.norm(gradient, ord='fro'))) ** p
-
-    solver = solvers.mlfbf(L=grad, Lt=div, step=stepsize)
-
-    if p == 1.:
-        problem = solvers.solve([f, g, functions.dummy()], x0=x0, solver=solver, **kwargs)
-        return problem['sol']
-    if p == 2.:
-        problem = solvers.solve([f, functions.dummy(), h], x0=x0, solver=solver, **kwargs)
-        return problem['sol']
-    else:
-        return x0
