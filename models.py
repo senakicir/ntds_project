@@ -11,6 +11,7 @@ import sklearn.svm as svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from trainer import Trainer
 from error import accuracy_prob, error_func
 
@@ -215,3 +216,29 @@ class Random_Forest():
 
     def reset(self, new_n_est, new_max_depth):
         self.clf = RandomForestClassifier(n_estimators=new_n_est, max_depth=new_max_depth,random_state=self.seed)
+
+
+class MLP():
+    def __init__(self, features, labels, seed=0, solver='adam', alpha=1e-5, hidden_layers=(25, 25), lr=1e-4, max_iter=1000):
+        self.seed = seed
+        self.features = features
+        self.labels = labels
+        self.clf = MLPClassifier(solver=solver, alpha=alpha, hidden_layer_sizes=hidden_layers,
+                                 shuffle=True, max_iter=max_iter, learning_rate_init=lr, random_state=self.seed)
+
+    def train(self, idx_train):
+        features_tr = self.features[idx_train]
+        labels_tr = self.labels[idx_train]
+        self.clf.fit(features_tr, labels_tr)
+
+    def classify(self, idx_test):
+        self.features_test = self.features[idx_test]
+        self.labels_test = self.labels[idx_test]
+        self.prediction = self.clf.predict(self.features_test)
+
+    def accuracy(self):
+        return error_func(self.labels_test, self.prediction)
+
+    def reset(self, solver='adam', alpha=1e-5, hidden_layers=(25, 25), lr=1e-4, max_iter=5000):
+        self.clf = MLPClassifier(solver=solver, alpha=alpha, hidden_layer_sizes=hidden_layers,
+                                 shuffle=True, max_iter=max_iter, learning_rate_init=lr, random_state=self.seed)

@@ -118,7 +118,6 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
         feature_values = remove_outliers(feature_values)
         name += "nooutlier_"
 
-    print(release_dates)
     adjacency = form_adjacency(feature_values, threshold = threshold, metric = metric)
 
     if not os.path.exists("dataset_saved_numpy"):
@@ -136,7 +135,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
         pygsp_graph = None
         if plot_graph:
             pygsp_graph = pg.graphs.Graph(adjacency, lap_type = 'normalized')
-        return feature_values, genres_gt,genres_gt_onehot,genres_classes, adjacency, pygsp_graph
+        return feature_values, genres_gt,genres_gt_onehot,genres_classes, adjacency, pygsp_graph, release_dates
     return name
 
 def load_features_labels_adjacency(name,plot_graph=False):

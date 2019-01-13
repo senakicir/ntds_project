@@ -6,7 +6,7 @@ import argparse
 
 from utils import *
 from visualization import *
-from models import SVM, Random_Forest, KNN, GCN
+from models import SVM, Random_Forest, KNN, GCN, MLP
 from error import error_func
 from graph_analysis import Our_Graph
 import graph_stats as gstats
@@ -137,13 +137,16 @@ def run_demo(args):
                                    random_state=SEED, eigen_tol=0.0,
                                    norm_laplacian=True)
 
+
         svm_clf = SVM(features, gt_labels, kernel='poly',seed=SEED)
         random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
         knn_clf = KNN(features, gt_labels)
+        mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
         if args.with_PCA:
             svm_clf_pca = SVM(features_pca, gt_labels, kernel='poly',seed=SEED)
             random_forest_clf_pca = Random_Forest(features_pca, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
             knn_clf_pca = KNN(features_pca, gt_labels)
+
 
         if args.use_eigenmaps:
             svm_clf_lap = SVM(features_lap, gt_labels, kernel='poly', seed=SEED)
@@ -185,6 +188,10 @@ def run_demo(args):
 
         mean_error_knn, std_error_knn = cross_validation(knn_clf, n_data,  K=5,classes=genres, name=default_name+"knn_")
         print('* KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+
+        mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, n_data, classes=genres,
+                                                         name=default_name + "mlp_")
+        print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
         print('')
 
         if args.with_PCA:
