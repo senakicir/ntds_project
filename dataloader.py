@@ -75,6 +75,8 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     #features_part_chroma = small_features.loc[:,('chroma_cens', ('median', 'mean'), slice('01','05'))] # Take chroma column as features
     #features_part = features_part_mfcc.join(features_part_chroma)
     features_part = small_features.loc[:,use_features].values
+    release_dates = subset['album', 'date_released'].values
+
 
     #save labels
     genres_gt = np.zeros([features_part.shape[0]],dtype=np.int8)-1
@@ -87,7 +89,7 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     if -1 in genres_gt:
         raise ValueError('Not all tracks were labeled')
     genres_gt_onehot[np.arange(features_part.shape[0]),genres_gt] = 1
-    return features_part, genres_gt,genres_gt_onehot,genres, dict_genres
+    return features_part, genres_gt,genres_gt_onehot,genres, dict_genres, release_dates
 
 def form_adjacency(features, threshold = 0.66, metric ='correlation'):
     distances = pdist(features, metric=metric) # Use cosine equation to calculate distance
@@ -103,7 +105,7 @@ def form_adjacency(features, threshold = 0.66, metric ='correlation'):
 def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False):
     tracks, features = csv_loader()
     #feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'], num_classes=num_classes)
-    feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
+    feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
 
     name = ""
     if (normalize_features):
@@ -116,6 +118,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
         feature_values = remove_outliers(feature_values)
         name += "nooutlier_"
 
+    print(release_dates)
     adjacency = form_adjacency(feature_values, threshold = threshold, metric = metric)
 
     if not os.path.exists("dataset_saved_numpy"):
@@ -126,6 +129,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     np.save("dataset_saved_numpy/"+ name + "features.npy", feature_values)
     np.save("dataset_saved_numpy/genres_classes.npy", genres_classes)
     np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
+    np.save("dataset_saved_numpy/release_dates.npy", release_dates)
     print("Features,labels,and genres saved using prefix: {}".format(name[:len(name)-1]))
 
     if (return_features):
@@ -148,9 +152,10 @@ def load_features_labels_adjacency(name,plot_graph=False):
     labels_onehot = np.load("dataset_saved_numpy/labels_onehot.npy")
     dict_genres = np.load("dataset_saved_numpy/dict_genres.npy")
     genres_classes = np.load("dataset_saved_numpy/genres_classes.npy")
+    release_dates = np.load("dataset_saved_numpy/release_dates.npy")
 
     pygsp_graph = None
     if plot_graph:
         pygsp_graph = pg.graphs.Graph(adjacency, lap_type = 'normalized')
         pygsp_graph.set_coordinates('spring') #for visualization
-    return features, labels,labels_onehot,genres_classes, adjacency, pygsp_graph
+    return features, labels,labels_onehot,genres_classes, adjacency, pygsp_graph, release_dates

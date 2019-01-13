@@ -24,7 +24,7 @@ parser.add_argument('--recalculate-features', action='store_true',
                     help="Calculate features before running classification (Default:False)")
 parser.add_argument('--plot-graph', action='store_true',
                     help="Plot Graph (Default:False)")
-parser.add_argument('--graph_statistics', action='store_true',
+parser.add_argument('--graph-statistics', action='store_true',
                     help="Report Graph Statistics (Default:False)")
 parser.add_argument('--with-PCA', action='store_true',
                     help="Apply PCA to features (Default:False)")
@@ -66,14 +66,14 @@ def run_demo(args):
         if args.only_features:
             return
 
-        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = output
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = output
         if args.with_PCA:
-            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = output_pca
+            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca, release_dates = output_pca
     else:
         print("Loading features, labels, and adjacency")
-        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
         if args.with_PCA:
-            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
+            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca, release_dates = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
 
 
 
@@ -81,14 +81,18 @@ def run_demo(args):
 
     if args.plot_graph:
         plot_gt_labels(pygsp_graph, gt_labels, default_name)
-        plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
+        if args.with_PCA:
+            plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
     if args.graph_statistics:
         '''OKAN WAS HERE!'''
-        gstats.basic(adjacency)
+        gstats.advanced(adjacency)
         if args.with_PCA:
-            gstats.basic(adjacency_pca)
+            gstats.advanced(adjacency_pca)
         return  # TODO: delete this when finished
+
+    gstats.growth_analysis(adjacency, release_dates, gt_labels)
+    return  # TODO: delete this when finished
 
     if args.use_eigenmaps:
         features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
