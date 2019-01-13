@@ -89,13 +89,14 @@ def run_demo(args):
         plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
     if args.transductive_learning:
-        print('Applying Transductive Learning')
+        print('#### Applying Transductive Learning ####')
         transductive_learning(adjacency=adjacency,labels=gt_labels,genres=genres,n_data=n_data,name=default_name)
         if args.with_PCA:
-            print('Applying Transductive Learning on PCA Adjacency')
+            print('#### Applying Transductive Learning on PCA Adjacency  ####')
             transductive_learning(adjacency=adjacency_pca,labels=gt_labels,genres=genres,n_data=n_data,name=pca_name)
 
     if args.inductive_learning:
+        print('#### Applying Transductive Learning ####')
         if args.use_eigenmaps:
             features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
                                random_state=SEED, eigen_tol=0.0,
@@ -128,69 +129,69 @@ def run_demo(args):
         #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
         #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
         if args.with_PCA:
-            print('##############GNN##############')
+            print('############## GNN + PCA ##############')
             gnn_clf_pca = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100)
             #gnn.train()
             #gnn.classify()
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf_pca, n_data, K=5,classes=genres, name=pca_name+"gnn_")
         else:
-            print('##############GNN##############')
+            print('############## GNN ##############')
             gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100)
             #gnn.train()
             #gnn.classify()
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=default_name+"gnn_")
 
-        print('GNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
+        print('* GNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 
 
         print('############## Normal Adjacency ##############')
 
         mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data,  K=5,classes=genres, name=default_name+"svm_")
-        print('SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+        print('* SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
         mean_error_rf, std_error_rf = cross_validation(random_forest_clf, n_data,  K=5,classes=genres, name=default_name+"rf_")
-        print('Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+        print('* Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
         mean_error_knn, std_error_knn = cross_validation(knn_clf, n_data,  K=5,classes=genres, name=default_name+"knn_")
-        print('KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+        print('* KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
         print('')
 
         if args.with_PCA:
             print('############## Normalized + PCA ##############')
 
             mean_error_svm, std_error_svm = cross_validation(features_pca, gt_labels, svm_clf, K=5,classes=genres, name=pca_name+"svm_")
-            print('Normalized, PCA, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+            print('* Normalized, PCA, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
             mean_error_rf, std_error_rf = cross_validation(features_pca, gt_labels, random_forest_clf, K=5,classes=genres, name=pca_name+"rf_")
-            print('Normalized, PCA, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+            print('* Normalized, PCA, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
             mean_error_knn, std_error_knn = cross_validation(features_pca, gt_labels, knn_clf, K=5,classes=genres, name=pca_name+"knn_")
-            print('Normalized, PCA, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+            print('* Normalized, PCA, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
             print('')
 
         if args.use_eigenmaps:
             print('############## Using Eigenmaps ##############')
 
             mean_error_svm, std_error_svm = cross_validation(features_lap, gt_labels, svm_clf, K=5,classes=genres, name=default_name+eigenmaps_name+"svm_")
-            print('Eigenmaps,SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+            print('* Eigenmaps,SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
             mean_error_rf, std_error_rf = cross_validation(features_lap, gt_labels, random_forest_clf, K=5,classes=genres, name=default_name+eigenmaps_name+"rf_")
-            print('Eigenmaps,Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+            print('* Eigenmaps,Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
             mean_error_knn, std_error_knn = cross_validation(features_lap, gt_labels, knn_clf, K=5,classes=genres, name=default_name+eigenmaps_name+"knn_")
-            print('Eigenmaps,KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+            print('* Eigenmaps,KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
             print('')
             if args.with_PCA:
                 print('############## Using Eigenmaps + Normalized + PCA ##############')
 
                 mean_error_svm, std_error_svm = cross_validation(features_lap_pca, gt_labels, svm_clf, K=5,classes=genres, name=pca_name+eigenmaps_name+"svm_")
-                print('Normalized, PCA,Eigenmaps, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+                print('* Normalized, PCA,Eigenmaps, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
                 mean_error_rf, std_error_rf = cross_validation(features_lap_pca, gt_labels, random_forest_clf, K=5,classes=genres, name=pca_name+eigenmaps_name+"rf_")
-                print('Normalized, PCA,Eigenmaps, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+                print('* Normalized, PCA,Eigenmaps, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
 
                 mean_error_knn, std_error_knn = cross_validation(features_lap_pca, gt_labels, knn_clf, K=5,classes=genres, name=pca_name+eigenmaps_name+"knn_")
-                print('Normalized, PCA,Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+                print('* Normalized, PCA,Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
 
 def run_grid_search_for_optimal_param():
     pca_name = "normalized_PCA_"
@@ -206,30 +207,30 @@ def run_grid_search_for_optimal_param():
 def transductive_learning(adjacency,labels,genres,n_data,name):
     adjacency = sparse.lil_matrix(adjacency).tocsr()
 
-    lgc = tr.LGC(graph=adjacency,y=labels,alpha=0.50)
-    hmn = tr.HMN(graph=adjacency,y=labels)
-    parw = tr.PARW(graph=adjacency,y=labels,lamb=10)
-    mad = tr.MAD(graph=adjacency,y=labels)
-    omni = tr.OMNIProp(graph=adjacency,y=labels)
-    camlp = tr.CAMLP(graph=adjacency,y=labels)
+    lgc = tr.LGC(graph=adjacency,y=labels,alpha=0.50,max_iter=30)
+    hmn = tr.HMN(graph=adjacency,y=labels,max_iter=30)
+    parw = tr.PARW(graph=adjacency,y=labels,lamb=10,max_iter=30)
+    mad = tr.MAD(graph=adjacency,y=labels,mu=np.array([1.0,0.5,1.0]),beta=2.0,max_iter=30)
+    omni = tr.OMNIProp(graph=adjacency,y=labels,lamb=1.0,max_iter=30)
+    camlp = tr.CAMLP(graph=adjacency,y=labels,beta=0.1,H=None,max_iter=30)
 
     mean_error_lgc, std_error_lgc = cross_validation(lgc, n_data,  K=5,classes=genres, name=name+"lgc_")
-    print('Local and Global Consistency - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_lgc, std_error_lgc))
+    print('* Local and Global Consistency - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_lgc, std_error_lgc))
 
     mean_error_hmn, std_error_hmn = cross_validation(hmn, n_data,  K=5,classes=genres, name=name+"hmn_")
-    print('Harmonic Function - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_hmn, std_error_hmn))
+    print('* Harmonic Function - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_hmn, std_error_hmn))
 
     mean_error_parw, std_error_parw = cross_validation(parw, n_data,  K=5,classes=genres, name=name+"parw_")
-    print('Partially Absorbing Random Walk - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_parw, std_error_parw))
+    print('* Partially Absorbing Random Walk - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_parw, std_error_parw))
 
     mean_error_mad, std_error_mad = cross_validation(mad, n_data,  K=5,classes=genres, name=name+"mad_")
-    print('Modified Adsorption - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mad, std_error_mad))
+    print('* Modified Adsorption - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mad, std_error_mad))
 
     mean_error_omni, std_error_omni = cross_validation(omni, n_data,  K=5,classes=genres, name=name+"omni_")
-    print('OMNI-Prop - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_omni, std_error_omni))
+    print('* OMNI-Prop - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_omni, std_error_omni))
 
     mean_error_camlp, std_error_camlp = cross_validation(camlp, n_data,  K=5,classes=genres, name=name+"camlp_")
-    print('Confidence-Aware Modulated Label Propagation - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_camlp, std_error_camlp))
+    print('* Confidence-Aware Modulated Label Propagation - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_camlp, std_error_camlp))
 
 
 if __name__ == "__main__":
