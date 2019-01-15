@@ -17,6 +17,7 @@ def cross_validation(model_ori, n_data, classes, K=5, name = ""):
     confusion_matrices = np.zeros([K, len(classes), len(classes)])
     for k in range(K):
         model = copy.deepcopy(model_ori)
+        model.reset()
         idx_test = shuffled_ind[batch_size*k:batch_size*(k+1)]
         idx_tr = np.concatenate([shuffled_ind[0:batch_size*k], shuffled_ind[batch_size*(k+1):-1]], axis=0)
 

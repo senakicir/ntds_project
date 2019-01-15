@@ -130,13 +130,13 @@ def run_demo(args):
         #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
         if args.with_PCA:
             print('############## GNN + PCA ##############')
-            gnn_clf_pca = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100)
+            gnn_clf_pca = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency_pca, features=features_pca, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
             #gnn.train()
             #gnn.classify()
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf_pca, n_data, K=5,classes=genres, name=pca_name+"gnn_")
         else:
             print('############## GNN ##############')
-            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100)
+            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
             #gnn.train()
             #gnn.classify()
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=default_name+"gnn_")
