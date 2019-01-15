@@ -15,6 +15,8 @@ from sklearn.neural_network import MLPClassifier
 from trainer import Trainer
 from error import accuracy_prob, error_func
 from collections import OrderedDict
+from sklearn.metrics import confusion_matrix
+
 
 
 def sparse_mx_to_torch_sparse_tensor(sparse_mx):
@@ -125,10 +127,13 @@ class GCN():
         self.labels_test = self.labels[idx_test]
         self.prediction = self.trainer.test(idx_test)
 
-    def accuracy(self):
-        #confusion_matrix(self.labels_test, self.prediction)
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, self.prediction)
         acc_test = accuracy_prob(self.prediction, self.labels_test)
-        return acc_test
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, acc_test
 
     def reset(self):
         dict_model = self.gcn.model
@@ -146,7 +151,7 @@ class SVM():
         if kernel == 'linear':
             self.clf = svm.LinearSVC(multi_class='ovr',random_state=seed) # Can use 'crammer_singer’ but more expensive while not that much better accuracy(only more stable)
         else:
-            self.clf = svm.SVC(gamma='auto', kernel=kernel,degree=poly_degree,decision_function_shape='ovr',random_state=seed)
+            self.clf = svm.SVC(gamma='auto', kernel=kernel, degree=poly_degree, decision_function_shape='ovr',random_state=seed)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]
@@ -158,8 +163,12 @@ class SVM():
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
 
-    def accuracy(self):
-        return error_func(self.labels_test, self.prediction)
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, error_func(self.labels_test, self.prediction)
 
     def reset(self):
         self.clf = svm.SVC(gamma='auto', kernel=self.kernel, degree=self.poly_degree, decision_function_shape='ovr',
@@ -182,8 +191,12 @@ class KNN():
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
 
-    def accuracy(self):
-        return error_func(self.labels_test, self.prediction)
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, error_func(self.labels_test, self.prediction)
 
     def reset(self):
         self.clf = KNeighborsClassifier(n_neighbors=self.n_neighbors)
@@ -206,8 +219,12 @@ class K_Means():
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
 
-    def accuracy(self):
-        return error_func(self.labels_test, self.prediction)
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, error_func(self.labels_test, self.prediction)
 
     def reset(self):
         self.clf = KMeans(n_clusters=self.numb_clusters, random_state=self.seed)
@@ -231,8 +248,13 @@ class Random_Forest():
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
 
-    def accuracy(self):
-        return error_func(self.labels_test, self.prediction)
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, error_func(self.labels_test, self.prediction)
+
 
     def reset(self):
         self.clf = RandomForestClassifier(n_estimators=self.n_estimators, max_depth=self.n_estimators,random_state=self.seed)
@@ -261,8 +283,13 @@ class MLP():
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
 
-    def accuracy(self):
-        return error_func(self.labels_test, self.prediction)
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, error_func(self.labels_test, self.prediction)
+
 
     def reset(self):
         self.clf = MLPClassifier(solver=self.solver, alpha=self.alpha, hidden_layer_sizes=self.hidden_layers,

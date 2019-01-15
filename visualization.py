@@ -25,7 +25,8 @@ def plot_confusion_matrix(our_confusion_matrix, classes, name):
     # Loop over data dimensions and create text annotations.
     for i in range(len(classes)):
         for j in range(len(classes)):
-            ax.text(j, i, our_confusion_matrix[i, j], ha="center", va="center", color="b")
+            ax.text(j, i, '{:.2f}'.format(our_confusion_matrix[i, j]), ha="center", va="center", color="b")
+
     plt.xticks(tick_marks, classes)
     plt.yticks(tick_marks, classes)
     plt.ylabel('True label')

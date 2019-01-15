@@ -23,8 +23,7 @@ def cross_validation(model_ori, n_data, classes, K=5, name = ""):
 
         model.train(idx_tr)
         model.classify(idx_test)
-        #confusion_matrices[k, :, :] = confusion_matrix(gt_labels_test, predicted_classes)
-        errors[k] = model.accuracy()
+        confusion_matrices[k, :, :], errors[k] = model.accuracy(classes)
         #print('Iter {0:d} Percentage Error: {1:.2f}'.format(k, errors[k]))
 
     mean_error = np.mean(errors)
