@@ -50,14 +50,19 @@ parser.add_argument('--transductive-learning', action='store_true',
                     help="Apply Transductive Learning (Default:False)")
 parser.add_argument('--inductive-learning', action='store_true',
                     help="Apply Inductive Learning (Default:False)")
+parser.add_argument('--use-cpu', action='store_false',
+                    help="Use CPU when training the GCN (Default:False)")    
+parser.add_argument('--gcn', action='store_true',
+                    help="Evaluate GCN (Default:False)")    
+parser.add_argument('--remove-disconnected', action='store_true',
+                    help="Remove outliers (Default:False)")    
 
 def load_parameters_and_data(args):
     args = parser.parse_args(args)
     np.random.seed(SEED)
-    default_name = ""
-    pca_name = "normalized_PCA_"
     eigenmaps_name = "eigenmaps_"
     stat_dirname = "graph_stats"
+    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -67,29 +72,20 @@ def load_parameters_and_data(args):
             num_classes = args.num_classes
 
         if args.with_PCA:
-            output = save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers= False, threshold =args.threshold, metric=args.distance_metric,
+            output = save_features_labels_adjacency(normalize_features=args.with_PCA, use_PCA=args.with_PCA, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
                                            use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph)
-            file_names = pca_name
-        else:
-            output = save_features_labels_adjacency(normalize_features=False, use_PCA=False, rem_outliers=False, threshold=args.threshold, metric=args.distance_metric,
-                                       use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph)
-            file_names = default_name
-
         if args.only_features:
             return
 
         features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = output
     else:
         print("Loading features, labels, and adjacency ...")
-        if args.with_PCA:
-            features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
-        else:
-            features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(names,plot_graph=args.plot_graph)
 
     print("Genres that will be used: {}".format(genres))
     n_data = features.shape[0]
 
-    return args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates
+    return args, n_data, names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates
 
 def train_everything(args):
     args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
@@ -118,10 +114,9 @@ def train_everything(args):
         svm_clf = SVM(features, gt_labels, kernel='poly',seed=SEED)
         random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
         knn_clf = KNN(features, gt_labels)
-        gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=True, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
         mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
 
-        mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data, K=5,classes=genres, name=file_names+"svm_")
+        mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data, K=5, classes=genres, name=file_names+"svm_")
         print('* SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
 
         mean_error_rf, std_error_rf = cross_validation(random_forest_clf, n_data, K=5,classes=genres, name=file_names+"rf_")
@@ -129,9 +124,11 @@ def train_everything(args):
 
         mean_error_knn, std_error_knn = cross_validation(knn_clf, n_data, K=5,classes=genres, name=file_names+"knn_")
         print('* KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
-
-        mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
-        print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+        
+        if args.gcn:    
+            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
+            mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
+            print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 
         if args.use_eigenmaps:
             print('############## Use Eigenmaps Adjacency ##############')

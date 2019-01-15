@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import ast
 from scipy.spatial.distance import pdist, squareform
-from utils import *
+from utils import remove_disconnected_nodes, generate_PCA_features, normalize_feat, uniform_random_subsample, form_file_names
 from visualization import plot_gt_labels
 import pdb
 import pygsp as pg
@@ -91,47 +91,31 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     genres_gt_onehot[np.arange(features_part.shape[0]),genres_gt] = 1
     return features_part, genres_gt,genres_gt_onehot,genres, dict_genres, release_dates
 
-def remove_disconnected_nodes(adjacency):
-    connected_nodes_ind = (np.sum(adjacency, axis=0) != 0)
-    return adjacency[connected_nodes_ind, :][:, connected_nodes_ind]
 
-def form_adjacency(features, threshold = 0.66, metric ='correlation'):
+def form_adjacency(features, labels, labels_one_hot, rem_disconnected, threshold = 0.66, metric ='correlation'):
     distances = pdist(features, metric=metric) # Use cosine equation to calculate distance
     kernel_width = distances.mean()
     weights = np.exp(-distances**2 / kernel_width**2) # Use Gaussian function to calculate weights
-
     weights[weights < threshold] = 0
     adjacency = squareform(weights)
+    if rem_disconnected:
+        adjacency, features, labels, labels_one_hot = remove_disconnected_nodes(adjacency, features, labels, labels_one_hot)
     num_of_disconnected_nodes = np.sum(np.sum(adjacency, axis=0) == 0)
     assert num_of_disconnected_nodes == 0
-    return adjacency
+    return adjacency, features, labels, labels_one_hot
 
-def uniform_random_subsample(adjacency, genres_gt, genres_gt_onehot, subsampling_percentage=0.10):
-    n_nodes = adjacency.shape[0]
-    shuffled_ind = np.random.permutation(n_nodes)
-    shuffled_ind_subsampled = shuffled_ind[0:int(n_nodes*subsampling_percentage)]
-    adjacency = adjacency[:, shuffled_ind_subsampled][shuffled_ind_subsampled, :]
-    genres_gt = genres_gt[shuffled_ind_subsampled]
-    genres_gt_onehot = genres_gt_onehot[shuffled_ind_subsampled, :]
-    return adjacency, genres_gt, genres_gt_onehot
-
-def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_outliers = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False):
+def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False):
     tracks, features = csv_loader()
     #feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'], num_classes=num_classes)
     feature_values, genres_gt, genres_gt_onehot,genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
 
-    name = ""
+    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold)
     if (normalize_features):
         feature_values = normalize_feat(feature_values)
-        name += "normalized_"
-    if use_PCA:
+    if (use_PCA):
         feature_values = generate_PCA_features(feature_values)
-        name += "PCA_"
-    if rem_outliers:
-        feature_values = remove_outliers(feature_values)
-        name += "nooutlier_"
 
-    adjacency = form_adjacency(feature_values, threshold = threshold, metric = metric)
+    adjacency, feature_values, genres_gt, genres_gt_onehot  = form_adjacency(feature_values, genres_gt, genres_gt_onehot, rem_disconnected,  threshold = threshold, metric = metric)
 
     if not os.path.exists("dataset_saved_numpy"):
         os.makedirs("dataset_saved_numpy")
@@ -142,7 +126,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     np.save("dataset_saved_numpy/genres_classes.npy", genres_classes)
     np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
     np.save("dataset_saved_numpy/release_dates.npy", release_dates)
-    print("Features,labels,and genres saved using prefix: {}".format(name[:len(name)-1]))
+    print("Dataset of size {}. Features,labels,and genres saved using prefix: {}".format(adjacency.shape[0], name[:len(name)-1]))
 
     if (return_features):
         pygsp_graph = None
