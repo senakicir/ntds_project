@@ -193,4 +193,4 @@ def transductive_learning(adjacency,labels,genres,n_data,name):
 
 
 if __name__ == "__main__":
-    run_demo(sys.argv[1:])
+    train_everything(sys.argv[1:])
