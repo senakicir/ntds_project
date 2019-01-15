@@ -78,7 +78,6 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     features_part = small_features.loc[:,use_features].values
     release_dates = subset['album', 'date_released'].values
 
-
     #save labels
     genres_gt = np.zeros([features_part.shape[0]],dtype=np.int8)-1
     genres_gt_onehot = np.zeros([features_part.shape[0],len(genres)],dtype=np.int8)
