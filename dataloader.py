@@ -3,6 +3,7 @@ import numpy as np
 import ast
 from scipy.spatial.distance import pdist, squareform
 from utils import *
+from visualization import plot_gt_labels
 import pdb
 import pygsp as pg
 import os
@@ -102,7 +103,6 @@ def form_adjacency(features, threshold = 0.66, metric ='correlation'):
 
     weights[weights < threshold] = 0
     adjacency = squareform(weights)
-    #adjacency = remove_disconnected_nodes(adjacency) #not yet
     num_of_disconnected_nodes = np.sum(np.sum(adjacency, axis=0) == 0)
     assert num_of_disconnected_nodes == 0
     return adjacency
@@ -132,15 +132,12 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
         feature_values = remove_outliers(feature_values)
         name += "nooutlier_"
 
-    full_adjacency = form_adjacency(feature_values, threshold = threshold, metric = metric)
-    adjacency, genres_gt, genres_gt_onehot = uniform_random_subsample(full_adjacency, genres_gt, genres_gt_onehot)
-    #sub_subsampled_adjacency = uniform_random_subsample(adjacency)
+    adjacency = form_adjacency(feature_values, threshold = threshold, metric = metric)
 
     if not os.path.exists("dataset_saved_numpy"):
         os.makedirs("dataset_saved_numpy")
     np.save("dataset_saved_numpy/labels.npy", genres_gt)
     np.save("dataset_saved_numpy/labels_onehot.npy",genres_gt_onehot)
-    np.save("dataset_saved_numpy/"+ name + "full_adjacency.npy", full_adjacency)
     np.save("dataset_saved_numpy/"+ name + "adjacency.npy", adjacency)
     np.save("dataset_saved_numpy/"+ name + "features.npy", feature_values)
     np.save("dataset_saved_numpy/genres_classes.npy", genres_classes)
@@ -151,10 +148,11 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     if (return_features):
         pygsp_graph = None
         if plot_graph:
-            #print("subsampled_adjacency", subsampled_adjacency.shape[0])
-            pygsp_graph = pg.graphs.Graph(adjacency, lap_type = 'normalized')
+            subsampled_adjacency, genres_gt, _ = uniform_random_subsample(adjacency, genres_gt, genres_gt_onehot)
+            pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
             pygsp_graph.set_coordinates('spring') #for visualization
-        return feature_values, genres_gt,genres_gt_onehot, genres_classes, adjacency, full_adjacency, pygsp_graph, release_dates
+            plot_gt_labels(pygsp_graph, genres_gt, name)
+        return feature_values, genres_gt,genres_gt_onehot, genres_classes, adjacency, pygsp_graph, release_dates
     return name
 
 def load_features_labels_adjacency(name, plot_graph=False):
@@ -165,7 +163,6 @@ def load_features_labels_adjacency(name, plot_graph=False):
     assert os.path.exists("dataset_saved_numpy/genres_classes.npy")
 
     features = np.load("dataset_saved_numpy/" + name + "features.npy")
-    full_adjacency =  np.load("dataset_saved_numpy/" + name + "full_adjacency.npy")
     adjacency =  np.load("dataset_saved_numpy/" + name + "adjacency.npy")
     labels = np.load("dataset_saved_numpy/labels.npy")
     labels_onehot = np.load("dataset_saved_numpy/labels_onehot.npy")
@@ -174,7 +171,9 @@ def load_features_labels_adjacency(name, plot_graph=False):
     release_dates = np.load("dataset_saved_numpy/release_dates.npy")
 
     pygsp_graph = None
-    #if plot_graph:
-    #    pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
-    #    pygsp_graph.set_coordinates('spring') #for visualization
-    return features, labels,labels_onehot, genres_classes, adjacency, full_adjacency,  pygsp_graph, release_dates
+    if plot_graph:
+        subsampled_adjacency, genres_gt, _ = uniform_random_subsample(adjacency, labels, labels_onehot)
+        pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
+        pygsp_graph.set_coordinates('spring') #for visualization
+        plot_gt_labels(pygsp_graph, genres_gt, name)
+    return features, labels,labels_onehot, genres_classes, adjacency,  pygsp_graph, release_dates

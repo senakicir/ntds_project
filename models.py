@@ -159,9 +159,7 @@ class SVM():
         self.prediction = self.clf.predict(self.features_test)
 
     def accuracy(self):
-        #confusion_matrix(self.labels_test, self.prediction)
         return error_func(self.labels_test, self.prediction)
-#        return self.clf.score(self.features_test,self.labels_test)
 
     def reset(self):
         self.clf = svm.SVC(gamma='auto', kernel=self.kernel, degree=self.poly_degree, decision_function_shape='ovr',
@@ -185,7 +183,6 @@ class KNN():
         self.prediction = self.clf.predict(self.features_test)
 
     def accuracy(self):
-        #confusion_matrix(self.labels_test, self.prediction)
         return error_func(self.labels_test, self.prediction)
 
     def reset(self):
@@ -210,7 +207,6 @@ class K_Means():
         self.prediction = self.clf.predict(self.features_test)
 
     def accuracy(self):
-        #confusion_matrix(self.labels_test, self.prediction)
         return error_func(self.labels_test, self.prediction)
 
     def reset(self):
@@ -236,7 +232,6 @@ class Random_Forest():
         self.prediction = self.clf.predict(self.features_test)
 
     def accuracy(self):
-        #confusion_matrix(self.labels_test, self.prediction)
         return error_func(self.labels_test, self.prediction)
 
     def reset(self):

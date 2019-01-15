@@ -74,25 +74,17 @@ def run_demo(args):
         if args.only_features:
             return
 
-        features, gt_labels, gt_labels_onehot, genres, adjacency, full_adjacency, pygsp_graph, release_dates = output
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = output
         if args.with_PCA:
-            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, full_adjacency_pca, pygsp_graph_pca, release_dates = output_pca
+            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca, release_dates = output_pca
     else:
         print("Loading features, labels, and adjacency")
-        features, gt_labels, gt_labels_onehot, genres, adjacency, full_adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
+        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(default_name,plot_graph=args.plot_graph)
         if args.with_PCA:
-            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, full_adjacency_pca, pygsp_graph_pca, release_dates = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
-
-    print("adjacency", adjacency.shape)
-    print("full_adjacency", full_adjacency.shape)
+            features_pca, gt_labels, gt_labels_onehot, genres, adjacency_pca, pygsp_graph_pca, release_dates = load_features_labels_adjacency(pca_name,plot_graph=args.plot_graph)
 
     print("Genres that will be used: {}".format(genres))
     n_data = features.shape[0]
-
-    if args.plot_graph:
-        plot_gt_labels(pygsp_graph, gt_labels, default_name)
-        if args.with_PCA:
-            plot_gt_labels(pygsp_graph_pca, gt_labels, pca_name)
 
     if args.graph_statistics:
         if not os.path.exists(stat_dirname):
