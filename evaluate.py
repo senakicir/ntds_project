@@ -7,6 +7,7 @@ from graph_analysis import Our_Graph
 from trainer import Trainer
 from sklearn.metrics import confusion_matrix
 import copy
+import time as time
 
 def cross_validation(model_ori, n_data, classes, K=5, name = ""):
     batch_size = n_data//K
@@ -32,6 +33,17 @@ def cross_validation(model_ori, n_data, classes, K=5, name = ""):
     plot_confusion_matrix(overall_confusion_matrix, classes, name)
     return mean_error, std_error
 
+def simple_test(model_ori, n_data, classes, name = ""):
+    model = copy.deepcopy(model_ori)
+    model.load_pretrained()
+
+    idx_test = np.array(list(range(n_data)))
+    model.classify(idx_test)
+
+    confusion_matrix, error = model.accuracy(classes)
+
+    plot_confusion_matrix(confusion_matrix, classes, name)
+    return error
 
 def grid_search_for_param(features, labels, model, model_name, classes, K=5, name = ""):
     if model_name == "KNN":
