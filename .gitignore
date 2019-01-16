@@ -5,3 +5,5 @@ dataset
 .tox
 .DS_Store
 *.pyc
+models
+visualizations
