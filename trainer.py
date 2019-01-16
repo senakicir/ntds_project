@@ -21,7 +21,7 @@ def sparse_mx_to_torch_sparse_tensor(sparse_mx):
     return torch.sparse.FloatTensor(indices, values, shape)
 
 class Trainer():
-    def __init__(self, model, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, batch_size=100):
+    def __init__(self, model, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, batch_size=100, model_path=""):
         self.model = model
         self.adjacency = adjacency
         self.features = features
@@ -32,6 +32,7 @@ class Trainer():
         self.weight_decay = weight_decay
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
+        self.model_path = model_path
 
         if self.cuda:
             self.model = self.model.cuda()
@@ -108,7 +109,7 @@ class Trainer():
 
         if best_val_acc < acc_val.mean():
             best_val_acc = acc_val.mean()
-            torch.save(self.model.state_dict(), 'models/best_model_gcn.pth')
+            torch.save(self.model.state_dict(), self.model_path)
 
     def test(self, idx_test):
         self.model.eval()

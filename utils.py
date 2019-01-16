@@ -47,5 +47,4 @@ def form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size,
         name += "rem_disconnected_"
     name += dataset_size + "_"
     name += "thr" + str(threshold) + "_"
-    
     return name

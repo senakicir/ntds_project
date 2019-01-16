@@ -89,7 +89,7 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     if -1 in genres_gt:
         raise ValueError('Not all tracks were labeled')
     genres_gt_onehot[np.arange(features_part.shape[0]),genres_gt] = 1
-    return features_part, genres_gt,genres_gt_onehot,genres, dict_genres, release_dates
+    return features_part, genres_gt, genres_gt_onehot,genres, dict_genres, release_dates
 
 
 def form_adjacency(features, labels, labels_one_hot, rem_disconnected, threshold = 0.66, metric ='correlation'):
@@ -107,7 +107,7 @@ def form_adjacency(features, labels, labels_one_hot, rem_disconnected, threshold
 def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False):
     tracks, features = csv_loader()
     #feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'], num_classes=num_classes)
-    feature_values, genres_gt, genres_gt_onehot,genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
+    feature_values, genres_gt, genres_gt_onehot, genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
 
     name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold)
     if (normalize_features):
@@ -133,7 +133,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
             pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
             pygsp_graph.set_coordinates('spring') #for visualization
             plot_gt_labels(pygsp_graph, genres_gt, name)
-        return feature_values, genres_gt,genres_gt_onehot, genres_classes, adjacency, pygsp_graph, release_dates
+        return feature_values, genres_gt, genres_gt_onehot, genres_classes, adjacency, pygsp_graph, release_dates
     return name
 
 def load_features_labels_adjacency(name, plot_graph=False):
@@ -159,4 +159,4 @@ def load_features_labels_adjacency(name, plot_graph=False):
         pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
         pygsp_graph.set_coordinates('spring') #for visualization
         plot_gt_labels(pygsp_graph, genres_gt, name)
-    return features, labels,labels_onehot, genres_classes, adjacency,  pygsp_graph, release_dates
+    return features, labels, labels_onehot, genres_classes, adjacency,  pygsp_graph, release_dates

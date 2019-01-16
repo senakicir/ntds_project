@@ -88,7 +88,7 @@ class GraphNeuralNet(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 class GCN():
-    def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100):
+    def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
         self.adjacency = adjacency
         self.features = features
         self.labels_onehot = labels
@@ -106,9 +106,10 @@ class GCN():
         #self.adjacency = sp.coo_matrix(self.adjacency)
         #self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
         self.labels = torch.LongTensor(np.where(self.labels_onehot)[1])
+        self.model_path = 'models/best_model_' + save_path + 'gcn.sav'
 
         #Create trainer
-        self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, regularization, lr, weight_decay, batch_size)
+        self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, regularization, lr, weight_decay, batch_size, self.model_path)
 
     def train(self, idx_train):
         train_size = idx_train.shape[0]
@@ -121,7 +122,7 @@ class GCN():
 
     def load_pretrained(self):
         #Load a pretrained model to test
-        self.gcn.load_state_dict(torch.load('models/best_model_gcn.pth'))
+        self.gcn.load_state_dict(torch.load(self.model_path))
 
     def classify(self, idx_test):
         self.labels_test = self.labels[idx_test]
@@ -142,7 +143,7 @@ class GCN():
                 dict_model[k].reset_parameters()
 
 class SVM():
-    def __init__(self, features, labels, kernel,poly_degree=3,seed=0):
+    def __init__(self, features, labels, kernel, poly_degree=3, seed=0, save_path=""):
         self.features = features
         self.labels = labels
         self.kernel = kernel
@@ -152,6 +153,7 @@ class SVM():
             self.clf = svm.LinearSVC(multi_class='ovr',random_state=seed) # Can use 'crammer_singer’ but more expensive while not that much better accuracy(only more stable)
         else:
             self.clf = svm.SVC(gamma='auto', kernel=kernel, degree=poly_degree, decision_function_shape='ovr',random_state=seed)
+        self.model_path = 'models/best_model_' + save_path + 'svm.sav'
         #Load a pretrained model to test
 
     def train(self, idx_train):
@@ -161,13 +163,13 @@ class SVM():
 
     def load_pretrained(self):
         #Load a pretrained model to test
-        self.clf = joblib.load('models/best_model_svm.sav')
+        self.clf = joblib.load(self.model_path)
 
     def classify(self, idx_test):
         self.features_test = self.features[idx_test]
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
-        joblib.dump(self.clf, 'models/best_model_svm.sav')
+        joblib.dump(self.clf, self.model_path)
 
     def accuracy(self, classes):
         c_m = confusion_matrix(self.labels_test, self.prediction)
@@ -181,22 +183,23 @@ class SVM():
                            random_state=self.seed)
 
 class KNN():
-    def __init__(self, features, labels, n_neighbors=42):
+    def __init__(self, features, labels, n_neighbors=42, save_path=""):
         self.features = features
         self.labels = labels
         self.n_neighbors = n_neighbors
         self.clf = KNeighborsClassifier(n_neighbors=n_neighbors)
+        self.model_path = 'models/best_model_' + save_path + 'knn.sav'
         #Load a pretrained model to test
 
     def load_pretrained(self):
         #Load a pretrained model to test
-        self.clf = joblib.load('models/best_model_knn.sav')
+        self.clf = joblib.load(self.model_path)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]
         labels_tr = self.labels[idx_train]
         self.clf.fit(features_tr, labels_tr)
-        joblib.dump(self.clf, 'models/best_model_knn.sav')
+        joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
         self.features_test = self.features[idx_test]
@@ -215,21 +218,22 @@ class KNN():
 
 
 class K_Means():
-    def __init__(self, features, labels, numb_clusters,seed=0):
+    def __init__(self, features, labels, numb_clusters,seed=0, save_path=""):
         self.features = features
         self.labels = labels
         self.numb_clusters = numb_clusters
         self.seed = seed
         self.clf = KMeans(n_clusters=numb_clusters, random_state=seed)
+        self.model_path = 'models/best_model_' + save_path + 'kmeans.sav'
 
     def load_pretrained(self):
         #Load a pretrained model to test
-        self.clf = joblib.load('models/best_model_kmeans.sav')
+        self.clf = joblib.load(self.model_path)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]
         self.clusters = self.clf.fit_predict(features_tr)
-        joblib.dump(self.clf, 'models/best_model_kmeans.sav')
+        joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
         self.features_test = self.features[idx_test]
@@ -247,23 +251,24 @@ class K_Means():
         self.clf = KMeans(n_clusters=self.numb_clusters, random_state=self.seed)
 
 class Random_Forest():
-    def __init__(self, features, labels, n_estimators, max_depth, criterion='gini', seed=0):
+    def __init__(self, features, labels, n_estimators, max_depth, criterion='gini', seed=0, save_path=""):
         self.seed = seed
         self.features = features
         self.labels = labels
         self.n_estimators = n_estimators
         self.n_estimators = max_depth
         self.clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,random_state=seed)
+        self.model_path = 'models/best_model_' + save_path + 'rf.sav'
 
     def load_pretrained(self):
         #Load a pretrained model to test
-        self.clf = joblib.load('models/best_model_rf.sav')
+        self.clf = joblib.load(self.model_path)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]
         labels_tr = self.labels[idx_train]
         self.clf.fit(features_tr,labels_tr)
-        joblib.dump(self.clf, 'models/best_model_rf.sav')
+        joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
         self.features_test = self.features[idx_test]
@@ -283,7 +288,7 @@ class Random_Forest():
 
 
 class MLP():
-    def __init__(self, features, labels, seed=0, solver='adam', alpha=1e-5, hidden_layers=(25, 25), lr=1e-4, max_iter=1000):
+    def __init__(self, features, labels, seed=0, solver='adam', alpha=1e-5, hidden_layers=(25, 25), lr=1e-4, max_iter=1000, save_path=""):
         self.seed = seed
         self.features = features
         self.labels = labels
@@ -296,15 +301,18 @@ class MLP():
         self.clf = MLPClassifier(solver=solver, alpha=alpha, hidden_layer_sizes=hidden_layers,
                                  shuffle=True, max_iter=max_iter, learning_rate_init=lr, random_state=self.seed)
 
+        self.model_path = 'models/best_model_' + save_path + 'mlp.sav'
+
+
     def load_pretrained(self):
         #Load a pretrained model to test
-        self.clf = joblib.load('models/best_model_mlp.sav')
+        self.clf = joblib.load(self.model_path)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]
         labels_tr = self.labels[idx_train]
         self.clf.fit(features_tr, labels_tr)
-        joblib.dump(self.clf, 'models/best_model_mlp.sav')
+        joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
         self.features_test = self.features[idx_test]
