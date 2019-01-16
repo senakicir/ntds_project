@@ -66,7 +66,7 @@ def load_parameters_and_data(args):
     np.random.seed(SEED)
     eigenmaps_name = "eigenmaps_"
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold)
+    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold, args.genres)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")

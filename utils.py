@@ -33,7 +33,7 @@ def uniform_random_subsample(adjacency, genres_gt, genres_gt_onehot, subsampling
     genres_gt_onehot = genres_gt_onehot[shuffled_ind_subsampled, :]
     return adjacency, genres_gt, genres_gt_onehot
 
-def form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold):
+def form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold, genres):
     if not os.path.exists("models"): os.makedirs("models")
     if not os.path.exists("visualizations"): os.makedirs("visualizations")
     if not os.path.exists("dataset_saved_numpy"): os.makedirs("dataset_saved_numpy")
@@ -45,7 +45,8 @@ def form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size,
         name += "PCA_"
     if rem_disconnected:
         name += "rem_disconnected_"
+    for genre in genres:
+        name += genre + "_"
     name += dataset_size + "_"
     name += "thr" + str(threshold) + "_"
-    
     return name

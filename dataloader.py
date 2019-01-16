@@ -109,7 +109,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     #feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'], num_classes=num_classes)
     feature_values, genres_gt, genres_gt_onehot,genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
 
-    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold)
+    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold, genres)
     if (normalize_features):
         feature_values = normalize_feat(feature_values)
     if (use_PCA):
