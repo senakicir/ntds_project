@@ -224,7 +224,7 @@ class K_Means():
         self.numb_clusters = numb_clusters
         self.seed = seed
         self.clf = KMeans(n_clusters=numb_clusters, random_state=seed)
-        self.model_path = 'models/best_model_' + save_path + 'kmeans.sav
+        self.model_path = 'models/best_model_' + save_path + 'kmeans.sav'
 
     def load_pretrained(self):
         #Load a pretrained model to test
@@ -258,7 +258,7 @@ class Random_Forest():
         self.n_estimators = n_estimators
         self.n_estimators = max_depth
         self.clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,random_state=seed)
-        self.model_path = 'models/best_model_' + save_path + 'rf.sav
+        self.model_path = 'models/best_model_' + save_path + 'rf.sav'
 
     def load_pretrained(self):
         #Load a pretrained model to test
@@ -301,15 +301,18 @@ class MLP():
         self.clf = MLPClassifier(solver=solver, alpha=alpha, hidden_layer_sizes=hidden_layers,
                                  shuffle=True, max_iter=max_iter, learning_rate_init=lr, random_state=self.seed)
 
+        self.model_path = 'models/best_model_' + save_path + 'mlp.sav'
+
+
     def load_pretrained(self):
         #Load a pretrained model to test
-        self.clf = joblib.load('models/best_model_mlp.sav')
+        self.clf = joblib.load(self.model_path)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]
         labels_tr = self.labels[idx_train]
         self.clf.fit(features_tr, labels_tr)
-        joblib.dump(self.clf, 'models/best_model_mlp.sav')
+        joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
         self.features_test = self.features[idx_test]
