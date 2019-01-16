@@ -128,8 +128,8 @@ class GCN():
         self.prediction = self.trainer.test(idx_test)
 
     def accuracy(self, classes):
-        c_m = confusion_matrix(self.labels_test, np.argmax(self.prediction.cpu().detach().numpy()))
-        acc_test = error_func(np.argmax(self.prediction.cpu().detach().numpy()), self.labels_test)
+        c_m = confusion_matrix(self.labels_test, np.argmax(self.prediction.cpu().detach().numpy(),,axis=1))
+        acc_test = error_func(np.argmax(self.prediction.cpu().detach().numpy(),,axis=1), self.labels_test)
         for i in range(len(classes)):
             labels_count = np.sum(self.labels_test == i)
             c_m[i,:] = (c_m[i,:] /labels_count)*100
