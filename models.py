@@ -91,7 +91,7 @@ class GCN():
     def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100):
         self.adjacency = adjacency
         self.features = features
-        self.labels = labels
+        self.labels_onehot = labels
         self.nfeat = features.shape[-1]
         self.nhid = nhid
         self.nclass = labels.shape[-1]
@@ -105,7 +105,7 @@ class GCN():
         self.adjacency = self.D_norm @ (self.adjacency) @ self.D_norm
         #self.adjacency = sp.coo_matrix(self.adjacency)
         #self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
-        self.labels = torch.LongTensor(np.where(self.labels)[1])
+        self.labels = torch.LongTensor(np.where(self.labels_onehot)[1])
 
         #Create trainer
         self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, regularization, lr, weight_decay, batch_size)
@@ -118,7 +118,7 @@ class GCN():
         self.idx_val = torch.LongTensor(idx_val)
         for epoch in range(self.epochs):
             self.trainer.train(epoch, self.idx_train, self.idx_val)
-        
+
     def load_pretrained(self):
         #Load a pretrained model to test
         self.gcn.load_state_dict(torch.load('models/best_model_gcn.pth'))
@@ -128,8 +128,8 @@ class GCN():
         self.prediction = self.trainer.test(idx_test)
 
     def accuracy(self, classes):
-        c_m = confusion_matrix(self.labels_test, self.prediction)
-        acc_test = accuracy_prob(self.prediction, self.labels_test)
+        c_m = confusion_matrix(self.labels_test, np.argmax(self.prediction.cpu().detach().numpy()))
+        acc_test = error_func(np.argmax(self.prediction.cpu().detach().numpy()), self.labels_test)
         for i in range(len(classes)):
             labels_count = np.sum(self.labels_test == i)
             c_m[i,:] = (c_m[i,:] /labels_count)*100
@@ -225,7 +225,7 @@ class K_Means():
     def load_pretrained(self):
         #Load a pretrained model to test
         self.clf = joblib.load('models/best_model_kmeans.sav')
-        
+
     def train(self, idx_train):
         features_tr = self.features[idx_train]
         self.clusters = self.clf.fit_predict(features_tr)
@@ -292,7 +292,7 @@ class MLP():
         self.hidden_layers = hidden_layers
         self.lr = lr
         self.max_iter = max_iter
-        
+
         self.clf = MLPClassifier(solver=solver, alpha=alpha, hidden_layer_sizes=hidden_layers,
                                  shuffle=True, max_iter=max_iter, learning_rate_init=lr, random_state=self.seed)
 
