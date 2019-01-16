@@ -32,6 +32,7 @@ class Trainer():
         self.weight_decay = weight_decay
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
+        self.model_path = model_path
 
         if self.cuda:
             self.model = self.model.cuda()
@@ -108,7 +109,7 @@ class Trainer():
 
         if best_val_acc < acc_val.mean():
             best_val_acc = acc_val.mean()
-            torch.save(self.model.state_dict(), model_path)
+            torch.save(self.model.state_dict(), self.model_path)
 
     def test(self, idx_test):
         self.model.eval()
