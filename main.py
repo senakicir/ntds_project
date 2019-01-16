@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('TkAgg')
 import numpy as np
 import pygsp as pg
 import pdb
@@ -137,7 +139,7 @@ def train_everything(args):
                                 random_state=SEED, eigen_tol=0.0,
                                 norm_laplacian=True)
 
-            svm_clf_lap = SVM(features_lap, gt_labels, kernel='poly', seed=SEED)
+            svm_clf_lap = SVM(features_lap, gt_labels, kernel='linear', seed=SEED)
             random_forest_clf_lap = Random_Forest(features_lap, gt_labels, n_estimators=1000, max_depth=2, seed=SEED)
             knn_clf_lap = KNN(features_lap, gt_labels)
 
@@ -170,7 +172,7 @@ def test_everything(args):
         
         #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
         #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
-        svm_clf = SVM(features, gt_labels, kernel='poly',seed=SEED)
+        svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED)
         random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
         knn_clf = KNN(features, gt_labels)
         mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
