@@ -117,8 +117,6 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
 
     adjacency, feature_values, genres_gt, genres_gt_onehot  = form_adjacency(feature_values, genres_gt, genres_gt_onehot, rem_disconnected,  threshold = threshold, metric = metric)
 
-    if not os.path.exists("dataset_saved_numpy"):
-        os.makedirs("dataset_saved_numpy")
     np.save("dataset_saved_numpy/labels.npy", genres_gt)
     np.save("dataset_saved_numpy/labels_onehot.npy",genres_gt_onehot)
     np.save("dataset_saved_numpy/"+ name + "adjacency.npy", adjacency)
@@ -143,7 +141,9 @@ def load_features_labels_adjacency(name, plot_graph=False):
     assert os.path.exists("dataset_saved_numpy/" + name + "adjacency.npy")
     assert os.path.exists("dataset_saved_numpy/labels.npy")
     assert os.path.exists("dataset_saved_numpy/labels_onehot.npy")
+    assert os.path.exists("dataset_saved_numpy/dict_genres.npy")
     assert os.path.exists("dataset_saved_numpy/genres_classes.npy")
+    assert os.path.exists("dataset_saved_numpy/release_dates.npy")
 
     features = np.load("dataset_saved_numpy/" + name + "features.npy")
     adjacency =  np.load("dataset_saved_numpy/" + name + "adjacency.npy")

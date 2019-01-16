@@ -11,12 +11,13 @@ from error import error_func
 from graph_analysis import Our_Graph
 import graph_stats as gstats
 from trainer import Trainer
-from evaluate import cross_validation, grid_search_for_param
+from evaluate import cross_validation, grid_search_for_param, simple_test
 
 from sklearn.manifold import spectral_embedding
 from dataloader import save_features_labels_adjacency, load_features_labels_adjacency
 import transductive as tr
 from scipy import sparse
+import time as time
 
 SEED = 0
 parser = argparse.ArgumentParser(description='Train image model with cross entropy loss')
@@ -90,18 +91,6 @@ def load_parameters_and_data(args):
 def train_everything(args):
     args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
 
-    if args.graph_statistics:
-        if not os.path.exists(stat_dirname):
-            os.makedirs(stat_dirname)
-
-        if args.graph_statistics == 'all':
-            gstats.allstats(adjacency, stat_dirname, active_plots=False)
-        elif args.graph_statistics == 'advanced':
-            gstats.advanced(adjacency, stat_dirname, active_plots=args.plot_graph)
-        else:  # basic setting
-            gstats.basic(adjacency)
-        gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
-
     if args.transductive_learning:
         print('#### Applying Transductive Learning ####')
         transductive_learning(adjacency=adjacency,labels=gt_labels,genres=genres,n_data=n_data,name=file_names)
@@ -116,15 +105,26 @@ def train_everything(args):
         knn_clf = KNN(features, gt_labels)
         mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
 
+        start = time.time()
         mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data, K=5, classes=genres, name=file_names+"svm_")
         print('* SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+        print("SVM time", time.time()-start)
 
+        start = time.time()
         mean_error_rf, std_error_rf = cross_validation(random_forest_clf, n_data, K=5,classes=genres, name=file_names+"rf_")
         print('* Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
+        print("RF time", time.time()-start)
 
+        start = time.time()
         mean_error_knn, std_error_knn = cross_validation(knn_clf, n_data, K=5,classes=genres, name=file_names+"knn_")
         print('* KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+        print("KNN time", time.time()-start)
         
+        start = time.time()
+        mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, n_data, K=5, classes=genres, name=file_names+"mlp_")
+        print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
+        print("MLP time", time.time()-start)
+
         if args.gcn:    
             gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
@@ -148,6 +148,49 @@ def train_everything(args):
 
             mean_error_knn, std_error_knn = cross_validation(knn_clf_lap, n_data, K=5,classes=genres, name=file_names+eigenmaps_name+"knn_")
             print('* Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+
+def test_everything(args):
+    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+
+    if args.graph_statistics:
+        if not os.path.exists(stat_dirname):
+            os.makedirs(stat_dirname)
+
+        if args.graph_statistics == 'all':
+            gstats.allstats(adjacency, stat_dirname, active_plots=False)
+        elif args.graph_statistics == 'advanced':
+            gstats.advanced(adjacency, stat_dirname, active_plots=args.plot_graph)
+        else:  # basic setting
+            gstats.basic(adjacency)
+        gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
+
+    if args.inductive_learning:
+        print('#### Testing Inductive Learning ####')
+        
+        #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
+        #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
+        svm_clf = SVM(features, gt_labels, kernel='poly',seed=SEED)
+        random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
+        knn_clf = KNN(features, gt_labels)
+        mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
+
+        error_svm = simple_test(svm_clf, n_data, classes=genres, name=file_names+"svm_")
+        print('* SVM simple test error: {:.2f}'.format(error_svm))
+
+        error_rf = simple_test(random_forest_clf, n_data, classes=genres, name=file_names+"rf_")
+        print('* Random Forest simple test error: {:.2f}'.format(error_rf))
+
+        error_knn = simple_test(knn_clf, n_data, classes=genres, name=file_names+"knn_")
+        print('* KNN simple test error: {:.2f}'.format(error_knn))
+        
+        error_mlp = simple_test(mlp_clf, n_data, classes=genres, name=file_names+"mlp_")
+        print('* MLP cross validation error: {:.2f}'.format(error_mlp))
+
+        if args.gcn:    
+            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
+            error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
+            print('* GCN simple test error: {:.2f}'.format(error_gnn))
+
 
 def run_grid_search_for_optimal_param():
     pca_name = "normalized_PCA_"
@@ -190,4 +233,4 @@ def transductive_learning(adjacency,labels,genres,n_data,name):
 
 
 if __name__ == "__main__":
-    train_everything(sys.argv[1:])
+    test_everything(sys.argv[1:])

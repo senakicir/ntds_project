@@ -9,8 +9,6 @@ def plot_gt_labels(graph, labels, name):
     graph.plot_signal(labels)
     plt.title('Groundtruth Labels')
 
-    if not os.path.exists("visualizations"):
-        os.makedirs("visualizations")
     name += 'gt_clusters.png'
     plt.savefig("visualizations/" + name)
     plt.close()

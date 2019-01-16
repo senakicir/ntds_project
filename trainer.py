@@ -108,7 +108,7 @@ class Trainer():
 
         if best_val_acc < acc_val.mean():
             best_val_acc = acc_val.mean()
-            torch.save(self.model.state_dict(), 'best_model_gcn.pth')
+            torch.save(self.model.state_dict(), 'models/best_model_gcn.pth')
 
     def test(self, idx_test):
         self.model.eval()

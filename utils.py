@@ -4,6 +4,7 @@ import ast
 from scipy.spatial.distance import pdist, squareform
 import pdb
 from sklearn.decomposition import PCA
+import os
 
 def generate_PCA_features(features):
     pca = PCA(n_components=10, svd_solver='arpack')
@@ -33,6 +34,10 @@ def uniform_random_subsample(adjacency, genres_gt, genres_gt_onehot, subsampling
     return adjacency, genres_gt, genres_gt_onehot
 
 def form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold):
+    if not os.path.exists("models"): os.makedirs("models")
+    if not os.path.exists("visualizations"): os.makedirs("visualizations")
+    if not os.path.exists("dataset_saved_numpy"): os.makedirs("dataset_saved_numpy")
+
     name = ""
     if (normalize_features):
         name += "normalized_"
