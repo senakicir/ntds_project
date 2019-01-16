@@ -106,7 +106,7 @@ class GCN():
         #self.adjacency = sp.coo_matrix(self.adjacency)
         #self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
         self.labels = torch.LongTensor(np.where(self.labels_onehot)[1])
-        self.model_path = 'models/best_model_' + save_path + 'gcn.sav'
+        self.model_path = 'models/best_model_' + save_path + 'batch_size_' + str(batch_size) +'_gcn.sav'
 
         #Create trainer
         self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, regularization, lr, weight_decay, batch_size, self.model_path)
