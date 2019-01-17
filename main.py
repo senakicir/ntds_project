@@ -58,6 +58,8 @@ parser.add_argument('--gcn', action='store_true',
                     help="Evaluate GCN (Default:False)")
 parser.add_argument('--mlp-nn', action='store_true',
                     help="Evaluate MLPNN (Default:False)")
+parser.add_argument('--use-mlp-features', action='store_true',
+                    help="use mlp features (Default:False)")
 parser.add_argument('--additional-models', action='store_true',
                     help="Evaluate with SVM, RBF, KNN, KMeans, MLP (Default:False)")
 parser.add_argument('--remove-disconnected', action='store_true',
@@ -67,7 +69,7 @@ parser.add_argument('--train', action='store_true',
 
 def load_parameters_and_data(args):
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold)
+    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,use_mlp)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -76,8 +78,8 @@ def load_parameters_and_data(args):
         else:
             num_classes = args.num_classes
 
-        output = save_features_labels_adjacency(use_PCA=args.with_PCA, use_eigenmaps=args.use_eigenmaps,rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
-                                           use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train)
+        output = save_features_labels_adjacency(normalize_features=args.with_PCA, use_PCA=args.with_PCA, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
+                                           use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train, use_mlp=args.use_mlp_features,use_cpu=args.use_cpu)
         if args.only_features:
             return
 

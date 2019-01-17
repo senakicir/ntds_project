@@ -122,6 +122,21 @@ class MLP():
             c_m[i,:] = (c_m[i,:] /labels_count)*100
         return c_m, acc_test
 
+    def get_rep(features):
+        self.load_pretrained()
+        self.net.eval()
+        dataset = MyDataset(features, np.zeros(features.shape()[0]))
+        data_loader = torch.utils.data.DataLoader(dataset=dataset,
+                                                   batch_size=self.batch_size,
+                                                   shuffle=False)
+        new_rep = np.array([])
+        for images, labels in data_loader:
+            images = images.cuda()
+            _, rep = self.net(images)
+            new_rep += rep.cpu().detach().numpy()
+
+        return new_rep
+
     def reset(self):
         dict_model = self.net.state_dict()
         for k, v in dict_model.items():
