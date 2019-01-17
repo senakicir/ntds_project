@@ -33,101 +33,54 @@ class Trainer():
         self.batch_size = batch_size
         self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
         self.model_path = model_path
+        self.best_val_acc = 0
 
         if self.cuda:
             self.model = self.model.cuda()
-            #self.features = self.features.cuda()
-            #self.adjacency = self.adjacency.cuda()
+            self.features = self.features.cuda()
+            self.adjacency = self.adjacency.cuda()
             self.labels = self.labels.cuda()
 
     def train(self, epoch, idx_train, idx_val):
-        loss_train = []
-        loss_val = []
-        acc_train = []
-        acc_val = []
-        best_val_acc = 0
         t = time.time()
-        #Training with batches
         self.model.train()
-        for b in range(0, idx_train.shape[0], self.batch_size):
-            #print('BATCH: ', b)
-            #import pdb
-            #pdb.set_trace()
-            mini_batch_size = self.batch_size
-            if b == idx_train.shape[0]//self.batch_size:
-                mini_batch_size = idx_train.shape[0] - b
-            self.adj_part = self.adjacency[idx_train[b : b + mini_batch_size]][:, idx_train[b:b + mini_batch_size]]
-            self.adj_part = sp.coo_matrix(self.adj_part)
-            self.adj_part = sparse_mx_to_torch_sparse_tensor(self.adj_part)
-            self.feat_part = self.features[idx_train[b : b + mini_batch_size]]
-            if self.cuda:
-                self.adj_part = self.adj_part.cuda()
-                self.feat_part = self.feat_part.cuda()
-            self.optimizer.zero_grad()
+        self.optimizer.zero_grad()
+        output = self.model(self.features, self.adjacency)
+        regularization_loss = 0
+        if self.regularization == 'l1':
+            for param in self.model.parameters():
+                regularization_loss += torch.sum(torch.abs(param))
 
-            output = self.model(self.feat_part, self.adj_part)
-            regularization_loss = 0
-            if self.regularization == 'l1':
-                for param in self.model.parameters():
-                    regularization_loss += torch.sum(torch.abs(param))
-
-                loss_train.append(F.nll_loss(output, self.labels[idx_train[b : b + mini_batch_size]]) + 0.001*regularization_loss)
-            else:
-                loss_train.append(F.nll_loss(output, self.labels[idx_train[b : b + mini_batch_size]]))
-            acc_train.append(accuracy_prob(output, self.labels[idx_train[b : b + mini_batch_size]]))
-            loss_train[-1].backward()
-            self.optimizer.step()
+            loss_train = F.nll_loss(output[idx_train], self.labels[idx_train]) + 0.001*regularization_loss
+        else:
+            loss_train = F.nll_loss(output[idx_train], self.labels[idx_train])
+        acc_train = accuracy_prob(output[idx_train], self.labels[idx_train])
+        loss_train.backward()
+        self.optimizer.step()
 
         self.model.eval()
-        for b in range(0, idx_val.shape[0], self.batch_size):
-            mini_batch_size = self.batch_size
-            if b == idx_val.shape[0] // self.batch_size:
-                mini_batch_size = idx_val.shape[0] - b
-            #Validation
-            self.adj_part = self.adjacency[idx_val[b : b + mini_batch_size]][:, idx_val[b:b + mini_batch_size]]
-            self.adj_part = sp.coo_matrix(self.adj_part)
-            self.adj_part = sparse_mx_to_torch_sparse_tensor(self.adj_part)
-            self.feat_part = self.features[idx_val[b : b + mini_batch_size]]
-            if self.cuda:
-                self.adj_part = self.adj_part.cuda()
-                self.feat_part = self.feat_part.cuda()
-            output = self.model(self.feat_part, self.adj_part)
-            loss_val.append(F.nll_loss(output, self.labels[idx_val[b : b + mini_batch_size]]))
-            acc_val.append(accuracy_prob(output, self.labels[idx_val[b : b + mini_batch_size]]))
+        output = self.model(self.features, self.adjacency)
+        loss_val = F.nll_loss(output[idx_val], self.labels[idx_val])
+        acc_val = accuracy_prob(output[idx_val], self.labels[idx_val])
 
-        loss_train = torch.FloatTensor(loss_train)
-        loss_val = torch.FloatTensor(loss_val)
-        acc_train = torch.FloatTensor(acc_train)
-        acc_val = torch.FloatTensor(acc_val)
         if epoch % 25 == 0:
             print('Epoch: {:04d}'.format(epoch + 1),
-                  'loss_train: {:.4f}'.format(loss_train.mean()),
-                  'acc_train: {:.4f}'.format(acc_train.mean()),
-                  'loss_val: {:.4f}'.format(loss_val.mean()),
-                  'acc_val: {:.4f}'.format(acc_val.mean()),
+                  'loss_train: {:.4f}'.format(loss_train),
+                  'acc_train: {:.4f}'.format(acc_train),
+                  'loss_val: {:.4f}'.format(loss_val),
+                  'acc_val: {:.4f}'.format(acc_val),
                   'time: {:.4f}s'.format(time.time() - t))
 
-        if best_val_acc < acc_val.mean():
-            best_val_acc = acc_val.mean()
+        if self.best_val_acc < acc_val.mean():
+            self.best_val_acc = acc_val.mean()
             torch.save(self.model.state_dict(), self.model_path)
 
     def test(self, idx_test):
         self.model.eval()
         test_output = None
-        for b in range(0, idx_test.shape[0], self.batch_size):
-            mini_batch_size = self.batch_size
-            if b == idx_test.shape[0] // self.batch_size:
-                mini_batch_size = idx_test.shape[0] - b
-            self.adj_part = self.adjacency[idx_test[b : b + mini_batch_size]][:, idx_test[b:b + mini_batch_size]]
-            self.adj_part = sp.coo_matrix(self.adj_part)
-            self.adj_part = sparse_mx_to_torch_sparse_tensor(self.adj_part)
-            self.feat_part = self.features[idx_test[b : b + mini_batch_size]]
-            if self.cuda:
-                self.adj_part = self.adj_part.cuda()
-                self.feat_part = self.feat_part.cuda()
-            output = self.model(self.feat_part, self.adj_part)
-            if test_output is not None:
-                test_output = torch.cat((test_output, output))
-            else:
-                test_output = output.clone()
+        output = self.model(self.features, self.adjacency)
+        if test_output is not None:
+            test_output = torch.cat((test_output, output))
+        else:
+            test_output = output.clone()
         return test_output
