@@ -49,7 +49,7 @@ class MyDataset(Dataset):
         return len(self.data)
 
 class MLP():
-    def __init__(self,hidden_size, features, labels,num_epoch,batch_size,num_classes,lr=0.001, save_path="",cuda=True,seed=0):
+    def __init__(self,hidden_size, features, labels,num_epoch,batch_size,num_classes,lr=0.0001, save_path="",cuda=True,seed=0):
         self.features = features
         self.labels = labels.astype(np.int32)
         self.num_classes = num_classes
@@ -70,7 +70,7 @@ class MLP():
     def train(self, idx_train):
         self.net.train()
         dataset = MyDataset(self.features[idx_train], self.labels[idx_train])
-        data_loader = torch.utils.data.DataLoader(dataset=self.dataset,
+        data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                                    batch_size=self.batch_size,
                                                    shuffle=True)
         for epoch in range(self.num_epochs):
@@ -89,29 +89,36 @@ class MLP():
 
                 if (i+1) % 100 == 0:
                     print ('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
-                           %(epoch+1, self.num_epochs, i+1, len(self.dataset)//self.batch_size, loss.item()))
+                           %(epoch+1, self.num_epochs, i+1, len(dataset)//self.batch_size, loss.item()))
+
+        torch.save(self.net.state_dict(), self.model_path)
+
     def load_pretrained(self):
         self.net.load_state_dict(torch.load(self.model_path))
     def classify(self, idx_test):
+        correct = 0
+        total = 0
         self.net.eval()
         self.labels_test = self.labels[idx_test]
         dataset = MyDataset(self.features[idx_test], self.labels_test)
-        data_loader = torch.utils.data.DataLoader(dataset=self.dataset,
+        data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                                    batch_size=self.batch_size,
                                                    shuffle=False)
+        self.prediction = np.array([])
         for images, labels in data_loader:
             images = images.cuda()
             outputs, _ = self.net(images)
-            _, self.prediction = torch.max(outputs.data, 1)
+            _, prediction = torch.max(outputs.data, 1)
+            self.prediction=np.concatenate([self.prediction,prediction.cpu().detach().numpy()])
             total += labels.size(0)
-            correct += (predicted.cpu() == labels).sum()
+            correct += (prediction.cpu() == labels).sum()
 
-        print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
+        #print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     def accuracy(self, classes):
-        c_m = confusion_matrix(self.labels_test, np.argmax(self.prediction.cpu().detach().numpy(),axis=1))
-        acc_test = error_func(np.argmax(self.prediction.cpu().detach().numpy(),axis=1), self.labels_test.numpy())
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        acc_test = error_func(self.prediction, self.labels_test)
         for i in range(len(classes)):
-            labels_count = np.sum(self.labels_test.numpy() == i)
+            labels_count = np.sum(self.labels_test == i)
             c_m[i,:] = (c_m[i,:] /labels_count)*100
         return c_m, acc_test
 

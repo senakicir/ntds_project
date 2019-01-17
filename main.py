@@ -13,13 +13,13 @@ from error import error_func
 from graph_analysis import Our_Graph
 import graph_stats as gstats
 from trainer import Trainer
-from evaluate import cross_validation, grid_search_for_param, simple_test
+from evaluate import cross_validation, simple_test
 
 from dataloader import save_features_labels_adjacency, load_features_labels_adjacency
 import transductive as tr
 from scipy import sparse
 import time as time
-from mlp import MLP
+from mlp import MLP as MLP_NN
 
 parser = argparse.ArgumentParser(description='Train image model with cross entropy loss')
 parser.add_argument('--only-features', action='store_true',
@@ -133,7 +133,7 @@ def train_everything(args):
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
         if args.mlp_nn:
-            mlp_nn = MLP(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
+            mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, n_data, K=5,classes=genres, name=file_names+"mlpNN_")
             print('* MLP NN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlpNN, std_error_mlpNN))
 
@@ -178,9 +178,9 @@ def test_everything(args):
             error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
         if args.mlp_nn:
-            mlp_nn = MLP(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
+            mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             error_mlpNN = simple_test(mlp_nn, n_data, classes=genres, name=file_names+"mlpNN_")
-            print('* GCN simple test error: {:.2f}'.format(error_mlpNN))
+            print('* MLP NN simple test error: {:.2f}'.format(error_mlpNN))
 
 def transductive_learning(adjacency,labels,genres,n_data,name):
     adjacency = sparse.csr_matrix(adjacency)
