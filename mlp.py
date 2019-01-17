@@ -101,14 +101,14 @@ class MLP():
         data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                                    batch_size=self.batch_size,
                                                    shuffle=False)
-        self.prediction = []
+        self.prediction = np.array([])
         for images, labels in data_loader:
             images = images.cuda()
             outputs, _ = self.net(images)
             _, prediction = torch.max(outputs.data, 1)
-            self.prediction += prediction.cpu().detach().numpy()
+            self.prediction=np.concatenate([self.prediction,prediction.cpu().detach().numpy()])
             total += labels.size(0)
-            correct += (self.prediction.cpu() == labels).sum()
+            correct += (prediction == labels).sum()
 
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     def accuracy(self, classes):
