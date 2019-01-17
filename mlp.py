@@ -58,7 +58,7 @@ class MLP():
         self.batch_size = batch_size
         self.cuda = cuda
         self.lr = lr
-        self.model_path = 'models/best_model_' + save_path + 'svm.sav'
+        self.model_path = 'models/best_model_' + save_path + 'mlpnn.sav'
         input_size = self.features.shape[1]
 
         self.net = Net(input_size, hidden_size, self.num_classes)
