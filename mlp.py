@@ -116,7 +116,7 @@ class MLP():
         return c_m, acc_test
 
     def reset(self):
-        dict_model = self.net
+        dict_model = self.net.state_dict()
         for k, v in dict_model.items():
             if "layer" in k:
                 dict_model[k].reset_parameters()
