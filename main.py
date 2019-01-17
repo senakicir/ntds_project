@@ -134,7 +134,7 @@ def train_everything(args):
 
         if args.gcn:
             print("Training GCN")
-            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_label, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=5000, save_path=file_names)
+            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=5000, save_path=file_names)
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 
@@ -174,25 +174,23 @@ def test_everything(args):
 
     if args.inductive_learning:
         print('#### Testing Inductive Learning ####')
+        if args.additional_models:
+            svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED)
+            random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
+            knn_clf = KNN(features, gt_labels)
+            mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
 
-        #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
-        #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
-        svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED)
-        random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
-        knn_clf = KNN(features, gt_labels)
-        mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
+            error_svm = simple_test(svm_clf, n_data, classes=genres, name=file_names+"svm_")
+            print('* SVM simple test error: {:.2f}'.format(error_svm))
 
-        error_svm = simple_test(svm_clf, n_data, classes=genres, name=file_names+"svm_")
-        print('* SVM simple test error: {:.2f}'.format(error_svm))
+            error_rf = simple_test(random_forest_clf, n_data, classes=genres, name=file_names+"rf_")
+            print('* Random Forest simple test error: {:.2f}'.format(error_rf))
 
-        error_rf = simple_test(random_forest_clf, n_data, classes=genres, name=file_names+"rf_")
-        print('* Random Forest simple test error: {:.2f}'.format(error_rf))
+            error_knn = simple_test(knn_clf, n_data, classes=genres, name=file_names+"knn_")
+            print('* KNN simple test error: {:.2f}'.format(error_knn))
 
-        error_knn = simple_test(knn_clf, n_data, classes=genres, name=file_names+"knn_")
-        print('* KNN simple test error: {:.2f}'.format(error_knn))
-
-        error_mlp = simple_test(mlp_clf, n_data, classes=genres, name=file_names+"mlp_")
-        print('* MLP cross validation error: {:.2f}'.format(error_mlp))
+            error_mlp = simple_test(mlp_clf, n_data, classes=genres, name=file_names+"mlp_")
+            print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
             gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
