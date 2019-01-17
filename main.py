@@ -78,8 +78,8 @@ def load_parameters_and_data(args):
         else:
             num_classes = args.num_classes
 
-        if args.with_PCA:
-            output = save_features_labels_adjacency(normalize_features=args.with_PCA, use_PCA=args.with_PCA, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
+        #if args.with_PCA:
+        output = save_features_labels_adjacency(normalize_features=args.with_PCA, use_PCA=args.with_PCA, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
                                            use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph)
         if args.only_features:
             return
@@ -96,7 +96,8 @@ def load_parameters_and_data(args):
 
 def train_everything(args):
     args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
-
+    import pdb
+    pdb.set_trace()
     if args.transductive_learning:
         print('#### Applying Transductive Learning ####')
         transductive_learning(adjacency=adjacency,labels=gt_labels,genres=genres,n_data=n_data,name=file_names)
