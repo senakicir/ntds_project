@@ -69,7 +69,7 @@ parser.add_argument('--train', action='store_true',
 
 def load_parameters_and_data(args):
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,args.use_mlp)
+    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,args.use_mlp_features)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
