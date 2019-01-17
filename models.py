@@ -282,10 +282,8 @@ class Random_Forest():
             c_m[i,:] = (c_m[i,:] /labels_count)*100
         return c_m, error_func(self.labels_test, self.prediction)
 
-
     def reset(self):
         self.clf = RandomForestClassifier(n_estimators=self.n_estimators, max_depth=self.n_estimators,random_state=self.seed)
-
 
 class MLP():
     def __init__(self, features, labels, seed=0, solver='adam', alpha=1e-5, hidden_layers=(25, 25), lr=1e-4, max_iter=1000, save_path=""):
