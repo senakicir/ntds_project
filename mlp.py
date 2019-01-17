@@ -49,7 +49,7 @@ class MyDataset(Dataset):
         return len(self.data)
 
 class MLP():
-    def __init__(self,hidden_size, features, labels,num_epoch,batch_size,num_classes, save_path="",cuda=True,seed=0):
+    def __init__(self,hidden_size, features, labels,num_epoch,batch_size,num_classes,lr=0.001, save_path="",cuda=True,seed=0):
         self.features = features
         self.labels = labels.astype(np.int32)
         self.num_classes = num_classes
@@ -57,6 +57,7 @@ class MLP():
         self.num_epochs = num_epoch
         self.batch_size = batch_size
         self.cuda = cuda
+        self.lr = lr
         self.model_path = 'models/best_model_' + save_path + 'svm.sav'
         input_size = self.features.shape[1]
 
@@ -65,7 +66,7 @@ class MLP():
             self.net.cuda()
 
         self.criterion = nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
+        self.optimizer = torch.optim.Adam(self.net.parameters(), lr=self.lr)
     def train(self, idx_train):
         self.net.train()
         dataset = MyDataset(self.features[idx_train], self.labels[idx_train])
