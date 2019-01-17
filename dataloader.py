@@ -164,7 +164,8 @@ def save_features_labels_adjacency(use_PCA = True, use_eigenmaps = True, rem_dis
                 feature_values = temp_feat[0:test_size, :]
 
         if use_mlp:
-            mlp_nn = MLP_NN(hidden_size=100, features=feature_values, labels=genres_gt,num_epoch=10,batch_size=100,num_classes=len(genres_classes), save_path=name,cuda=use_cpu)
+            mlp_name = form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp)
+            mlp_nn = MLP_NN(hidden_size=100, features=feature_values, labels=genres_gt,num_epoch=10,batch_size=100,num_classes=len(genres_classes), save_path=mlp_name,cuda=use_cpu)
             feature_values = mlp_nn.get_rep(feature_values)
         adjacency, feature_values, genres_gt, genres_classes  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
         if (use_eigenmaps):
