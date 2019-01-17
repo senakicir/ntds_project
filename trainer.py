@@ -77,10 +77,6 @@ class Trainer():
 
     def test(self, idx_test):
         self.model.eval()
-        test_output = None
         output = self.model(self.features, self.adjacency)
-        if test_output is not None:
-            test_output = torch.cat((test_output, output))
-        else:
-            test_output = output.clone()
+        test_output = output[idx_test]
         return test_output
