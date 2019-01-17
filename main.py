@@ -78,7 +78,6 @@ def load_parameters_and_data(args):
         else:
             num_classes = args.num_classes
 
-        #if args.with_PCA:
         output = save_features_labels_adjacency(normalize_features=args.with_PCA, use_PCA=args.with_PCA, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
                                            use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train)
         if args.only_features:
