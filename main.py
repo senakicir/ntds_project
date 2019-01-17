@@ -96,8 +96,6 @@ def load_parameters_and_data(args):
 
 def train_everything(args):
     args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
-    import pdb
-    pdb.set_trace()
     if args.transductive_learning:
         print('#### Applying Transductive Learning ####')
         transductive_learning(adjacency=adjacency,labels=gt_labels,genres=genres,n_data=n_data,name=file_names)
@@ -135,7 +133,7 @@ def train_everything(args):
 
         if args.gcn:
             print("Training GCN")
-            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=5000, save_path=file_names)
+            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=10000, save_path=file_names)
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 

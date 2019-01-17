@@ -89,7 +89,7 @@ class GraphNeuralNet(torch.nn.Module):
 
 class GCN():
     def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
-        self.adjacency = adjacency
+        self.adjacency_unnorm = adjacency
         self.features = features
         self.labels_onehot = labels
         self.nfeat = features.shape[-1]
@@ -99,12 +99,12 @@ class GCN():
         self.gcn = GraphNeuralNet(self.nfeat, self.nhid, self.nclass, dropout)
 
         self.features = torch.FloatTensor(np.array(self.features))
-        self.adjacency = (self.adjacency + np.eye(self.adjacency.shape[0]))
-        self.D = np.diag(self.adjacency.sum(axis=1))
+        self.adjacency_unnorm = (self.adjacency_unnorm + np.eye(self.adjacency_unnorm.shape[0]))
+        self.D = np.diag(self.adjacency_unnorm.sum(axis=1))
         self.D_norm = (np.power(np.linalg.inv(self.D), 0.5))
-        self.adjacency = self.D_norm @ (self.adjacency) @ self.D_norm
-        #self.adjacency = sp.coo_matrix(self.adjacency)
-        #self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
+        self.D_norm_sparse = sp.coo_matrix(self.D_norm)
+        self.adjacency_norm = self.D_norm_sparse @ sp.coo_matrix(self.adjacency_unnorm) @ self.D_norm_sparse
+        self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency_norm)
         self.labels = torch.LongTensor(np.where(self.labels_onehot)[1])
         self.model_path = 'models/best_model_' + save_path + 'batch_size_' + str(batch_size) +'_gcn.sav'
 
