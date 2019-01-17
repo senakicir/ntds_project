@@ -6,6 +6,9 @@ import pdb
 from sklearn.decomposition import PCA
 import os
 
+SEED = 0
+np.random.seed(SEED)
+
 def generate_PCA_features(features):
     pca = PCA(n_components=10, svd_solver='arpack')
     return pca.fit_transform(features)
@@ -31,20 +34,23 @@ def uniform_random_subsample(adjacency, genres_gt, subsampling_percentage=0.10):
     genres_gt = genres_gt[shuffled_ind_subsampled]
     return adjacency, genres_gt
 
-def form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold,use_mlp):
+def form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp):
     if not os.path.exists("models"): os.makedirs("models")
     if not os.path.exists("visualizations"): os.makedirs("visualizations")
     if not os.path.exists("dataset_saved_numpy"): os.makedirs("dataset_saved_numpy")
 
     name = ""
-    if (normalize_features):
-        name += "normalized_"
     if use_PCA:
         name += "PCA_"
     if rem_disconnected:
         name += "rem_disconnected_"
+
     if use_mlp:
         name += "useMLP_"
+
+    if use_eigenmaps:
+        name += "use_eigmaps_"
+
     name += dataset_size + "_"
     name += "thr" + str(threshold) + "_"
     return name
