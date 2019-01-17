@@ -20,7 +20,7 @@ from dataloader import save_features_labels_adjacency, load_features_labels_adja
 import transductive as tr
 from scipy import sparse
 import time as time
-from mlp import do_mlp
+from mlp import MLP
 
 SEED = 0
 parser = argparse.ArgumentParser(description='Train image model with cross entropy loss')
@@ -58,6 +58,8 @@ parser.add_argument('--use-cpu', action='store_false',
                     help="Use CPU when training the GCN (Default:False)")
 parser.add_argument('--gcn', action='store_true',
                     help="Evaluate GCN (Default:False)")
+parser.add_argument('--mlp-nn', action='store_true',
+                    help="Evaluate MLPNN (Default:False)")
 parser.add_argument('--additional-models', action='store_true',
                     help="Evaluate with SVM, RBF, KNN, KMeans, MLP (Default:False)")
 parser.add_argument('--remove-disconnected', action='store_true',
@@ -135,7 +137,10 @@ def train_everything(args):
             gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=10000, save_path=file_names)
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
-
+        if args.mlp_nn:
+            mlp_nn = MLP(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names)
+            mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, n_data, K=5,classes=genres, name=file_names+"mlpNN_")
+            print('* MLP NN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlpNN, std_error_mlpNN))
         if args.use_eigenmaps:
             print('############## Use Eigenmaps Adjacency ##############')
             features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
@@ -154,6 +159,7 @@ def train_everything(args):
 
             mean_error_knn, std_error_knn = cross_validation(knn_clf_lap, n_data, K=5,classes=genres, name=file_names+eigenmaps_name+"knn_")
             print('* Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
+
 
 def test_everything(args):
     args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
@@ -194,7 +200,10 @@ def test_everything(args):
             gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000, save_path=file_names)
             error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
-
+        if args.mlp_nn:
+            mlp_nn = MLP(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names)
+            error_mlpNN = simple_test(mlp_nn, n_data, classes=genres, name=file_names+"mlpNN_")
+            print('* GCN simple test error: {:.2f}'.format(error_mlpNN))
 ##should we get rid of this?
 def run_grid_search_for_optimal_param():
     pca_name = "normalized_PCA_"
@@ -237,7 +246,7 @@ def transductive_learning(adjacency,labels,genres,n_data,name):
 
 def call_mlp(args):
     args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
-    do_mlp(x_train=features[:int(0.8*len(features))], y_train=gt_labels[:int(0.8*len(gt_labels))],x_test=features[int(0.8*len(features)):len(features)], y_test=gt_labels[int(0.8*len(gt_labels)):len(gt_labels)],num_classes=len(genres))
+    #do_mlp(x_train=features[:int(0.8*len(features))], y_train=gt_labels[:int(0.8*len(gt_labels))],x_test=features[int(0.8*len(features)):len(features)], y_test=gt_labels[int(0.8*len(gt_labels)):len(gt_labels)],num_classes=len(genres))
 
 if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
