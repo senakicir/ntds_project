@@ -70,7 +70,7 @@ class MLP():
     def train(self, idx_train):
         self.net.train()
         dataset = MyDataset(self.features[idx_train], self.labels[idx_train])
-        data_loader = torch.utils.data.DataLoader(dataset=self.dataset,
+        data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                                    batch_size=self.batch_size,
                                                    shuffle=True)
         for epoch in range(self.num_epochs):
@@ -96,7 +96,7 @@ class MLP():
         self.net.eval()
         self.labels_test = self.labels[idx_test]
         dataset = MyDataset(self.features[idx_test], self.labels_test)
-        data_loader = torch.utils.data.DataLoader(dataset=self.dataset,
+        data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                                    batch_size=self.batch_size,
                                                    shuffle=False)
         for images, labels in data_loader:
