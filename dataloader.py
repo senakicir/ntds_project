@@ -75,8 +75,13 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
         if not(num_classes is None):
             genre_count = np.zeros([len(genres,)])
             for ind, genre in enumerate(genres):
-                genre_count[ind]=(np.sum(subset_tracks['track', 'genre_top'] == genre)
+                genre_count[ind]=(np.sum(subset_tracks['track', 'genre_top'] == genre))
                 ind_sort = np.argsort(genre_count)
+                genres_to_include = ind_sort[num_classes:]
+            our_genres = []
+            for ind in genres_to_include:
+                our_genres.append(genres[ind])
+            genres = our_genres
 
 
     subset = subset_tracks.loc[subset_tracks['track', 'genre_top'].isin(genres)]
