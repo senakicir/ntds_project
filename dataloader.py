@@ -136,7 +136,7 @@ def form_adjacency(features, labels, genres, rem_disconnected, threshold = 0.66,
     assert num_of_disconnected_nodes == 0
     return adjacency, features, labels, genres
 
-def save_features_labels_adjacency(use_PCA = True, use_eigenmaps = True, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True,use_mlp=False,use_cpu=False):
+def save_features_labels_adjacency(use_PCA = True, use_eigenmaps = False, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True,use_mlp=False,use_cpu=False):
     tracks, features = csv_loader()
     features_part_train, features_part_test, genres_gt_train, genres_gt_test, genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size, genres =genres, num_classes=num_classes)
     all_features = np.vstack([features_part_test, features_part_train])
