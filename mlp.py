@@ -93,6 +93,8 @@ class MLP():
     def load_pretrained(self):
         self.net.load_state_dict(torch.load(self.model_path))
     def classify(self, idx_test):
+        correct = 0
+        total = 0
         self.net.eval()
         self.labels_test = self.labels[idx_test]
         dataset = MyDataset(self.features[idx_test], self.labels_test)
