@@ -106,7 +106,7 @@ class GCN():
         #self.adjacency = sp.coo_matrix(self.adjacency)
         #self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency)
         self.labels = torch.LongTensor(np.where(self.labels_onehot)[1])
-        self.model_path = 'models/best_model_batch_size' + str(batch_size)+ "_epochs" + str(epochs) + "_" + save_path + 'gcn.sav'
+        self.model_path = 'models/best_model_' + save_path + 'batch_size_' + str(batch_size) +'_gcn.sav'
 
         #Create trainer
         self.trainer = Trainer(self.gcn, self.adjacency, self.features, self.labels, cuda, regularization, lr, weight_decay, batch_size, self.model_path)
@@ -130,9 +130,9 @@ class GCN():
 
     def accuracy(self, classes):
         c_m = confusion_matrix(self.labels_test, np.argmax(self.prediction.cpu().detach().numpy(),axis=1))
-        acc_test = error_func(np.argmax(self.prediction.cpu().detach().numpy(),axis=1), self.labels_test)
+        acc_test = error_func(np.argmax(self.prediction.cpu().detach().numpy(),axis=1), self.labels_test.numpy())
         for i in range(len(classes)):
-            labels_count = np.sum(self.labels_test == i)
+            labels_count = np.sum(self.labels_test.numpy() == i)
             c_m[i,:] = (c_m[i,:] /labels_count)*100
         return c_m, acc_test
 
