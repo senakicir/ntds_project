@@ -101,17 +101,19 @@ class MLP():
         data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                                    batch_size=self.batch_size,
                                                    shuffle=False)
+        self.prediction = []
         for images, labels in data_loader:
             images = images.cuda()
             outputs, _ = self.net(images)
-            _, self.prediction = torch.max(outputs.data, 1)
+            _, prediction = torch.max(outputs.data, 1)
+            self.prediction += prediction.cpu().detach().numpy()
             total += labels.size(0)
             correct += (self.prediction.cpu() == labels).sum()
 
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     def accuracy(self, classes):
-        c_m = confusion_matrix(self.labels_test, self.prediction.cpu().detach().numpy())
-        acc_test = error_func(self.prediction.cpu().detach().numpy(), self.labels_test.numpy())
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        acc_test = error_func(self.prediction, self.labels_test.numpy())
         for i in range(len(classes)):
             labels_count = np.sum(self.labels_test.numpy() == i)
             c_m[i,:] = (c_m[i,:] /labels_count)*100
