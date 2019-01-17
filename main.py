@@ -20,6 +20,7 @@ from dataloader import save_features_labels_adjacency, load_features_labels_adja
 import transductive as tr
 from scipy import sparse
 import time as time
+from mlp import do_mlp
 
 SEED = 0
 parser = argparse.ArgumentParser(description='Train image model with cross entropy loss')
@@ -133,7 +134,7 @@ def train_everything(args):
 
         if args.gcn:
             print("Training GCN")
-            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000, save_path=file_names)
+            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=5000, save_path=file_names)
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 
@@ -238,9 +239,13 @@ def transductive_learning(adjacency,labels,genres,n_data,name):
     mean_error_camlp, std_error_camlp = cross_validation(camlp, n_data,  K=5,classes=genres, name=name+"camlp_")
     print('* Confidence-Aware Modulated Label Propagation - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_camlp, std_error_camlp))
 
+def call_mlp(args):
+    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+    do_mlp(x_train=features[:int(0.8*len(features))], y_train=gt_labels[:int(0.8*len(gt_labels))],x_test=features[int(0.8*len(features)):len(features)], y_test=gt_labels[int(0.8*len(gt_labels)):len(gt_labels)],num_classes=len(genres))
 
 if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
+    #call_mlp(args)
     if args.train:
         train_everything(args)
     else:
