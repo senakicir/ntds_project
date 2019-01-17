@@ -146,7 +146,6 @@ class SVM():
     def __init__(self, features, labels, kernel, poly_degree=3, seed=0, save_path=""):
         self.features = features
         self.labels = labels
-        pdb.set_trace()
         self.kernel = kernel
         self.poly_degree = poly_degree
         self.seed = seed
