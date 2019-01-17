@@ -69,7 +69,7 @@ def load_parameters_and_data(args):
     np.random.seed(SEED)
     eigenmaps_name = "eigenmaps_"
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold)
+    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold, args.train)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -80,24 +80,23 @@ def load_parameters_and_data(args):
 
         #if args.with_PCA:
         output = save_features_labels_adjacency(normalize_features=args.with_PCA, use_PCA=args.with_PCA, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
-                                           use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph)
+                                           use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train)
         if args.only_features:
             return
 
-        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = output
+        features, gt_labels, genres, adjacency, pygsp_graph, release_dates = output
     else:
         print("Loading features, labels, and adjacency ...")
-        features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(names,plot_graph=args.plot_graph)
+        features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(names,plot_graph=args.plot_graph)
 
-    print("Genres that will be used: {}".format(genres))
     n_data = features.shape[0]
+    print("The dataset size is: {}. Genres that will be used: {}".format(n_data, genres))
 
-    return args, n_data, names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates
+    return args, n_data, names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates
 
 def train_everything(args):
-    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
-    import pdb
-    pdb.set_trace()
+    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+
     if args.transductive_learning:
         print('#### Applying Transductive Learning ####')
         transductive_learning(adjacency=adjacency,labels=gt_labels,genres=genres,n_data=n_data,name=file_names)
@@ -135,7 +134,7 @@ def train_everything(args):
 
         if args.gcn:
             print("Training GCN")
-            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=5000, save_path=file_names)
+            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_label, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 500, batch_size=5000, save_path=file_names)
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 
@@ -159,7 +158,7 @@ def train_everything(args):
             print('* Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
 
 def test_everything(args):
-    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
 
     if args.graph_statistics:
         if not os.path.exists(stat_dirname):
@@ -196,14 +195,14 @@ def test_everything(args):
         print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
-            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels_onehot, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
+            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
             error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
 
 ##should we get rid of this?
 def run_grid_search_for_optimal_param():
     pca_name = "normalized_PCA_"
-    features_pca, gt_labels, gt_labels_onehot,genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
+    features_pca, gt_labels,genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
 
     svm_clf = SVM(kernel='poly',seed=SEED)
     random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2,seed=SEED)
@@ -241,7 +240,7 @@ def transductive_learning(adjacency,labels,genres,n_data,name):
     print('* Confidence-Aware Modulated Label Propagation - cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_camlp, std_error_camlp))
 
 def call_mlp(args):
-    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, gt_labels_onehot, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
     do_mlp(x_train=features[:int(0.8*len(features))], y_train=gt_labels[:int(0.8*len(gt_labels))],x_test=features[int(0.8*len(features)):len(features)], y_test=gt_labels[int(0.8*len(gt_labels)):len(gt_labels)],num_classes=len(genres))
 
 if __name__ == "__main__":
