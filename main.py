@@ -69,7 +69,7 @@ def load_parameters_and_data(args):
     np.random.seed(SEED)
     eigenmaps_name = "eigenmaps_"
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold, args.train)
+    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -86,7 +86,7 @@ def load_parameters_and_data(args):
         features, gt_labels, genres, adjacency, pygsp_graph, release_dates = output
     else:
         print("Loading features, labels, and adjacency ...")
-        features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(names,plot_graph=args.plot_graph)
+        features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(names, args.train, plot_graph=args.plot_graph)
 
     n_data = features.shape[0]
     print("The dataset size is: {}. Genres that will be used: {}".format(n_data, genres))

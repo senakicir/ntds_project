@@ -169,7 +169,6 @@ class SVM():
         self.features_test = self.features[idx_test]
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
-        pdb.set_trace()
         joblib.dump(self.clf, self.model_path)
 
     def accuracy(self, classes):

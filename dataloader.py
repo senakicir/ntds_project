@@ -119,20 +119,25 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
     tracks, features = csv_loader()
     feature_values, genres_gt, genres_classes, dict_genres, release_dates = select_features(tracks, features, train, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
 
-    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold, train)
+    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold)
     if (normalize_features):
         feature_values = normalize_feat(feature_values)
     if (use_PCA):
         feature_values = generate_PCA_features(feature_values)
+    
+    if train:
+        file_name = name + "train_"
+    else:
+        file_name = name + "test_"
 
     adjacency, feature_values, genres_gt, genres_classes  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
 
-    np.save("dataset_saved_numpy/"+ name + "labels.npy", genres_gt)
-    np.save("dataset_saved_numpy/"+ name + "adjacency.npy", adjacency)
-    np.save("dataset_saved_numpy/"+ name + "features.npy", feature_values)
-    np.save("dataset_saved_numpy/" + name + "genres_classes.npy", genres_classes)
+    np.save("dataset_saved_numpy/"+ file_name + "labels.npy", genres_gt)
+    np.save("dataset_saved_numpy/"+ file_name + "adjacency.npy", adjacency)
+    np.save("dataset_saved_numpy/"+ file_name + "features.npy", feature_values)
+    np.save("dataset_saved_numpy/" + file_name + "genres_classes.npy", genres_classes)
     np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
-    np.save("dataset_saved_numpy/" + name + "release_dates.npy", release_dates)
+    np.save("dataset_saved_numpy/" + file_name + "release_dates.npy", release_dates)
     print("Dataset of size {}. Features,labels,and genres saved using prefix: {}".format(adjacency.shape[0], name[:len(name)-1]))
 
     if (return_features):
@@ -145,20 +150,25 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
         return feature_values, genres_gt, genres_classes, adjacency, pygsp_graph, release_dates
     return name
 
-def load_features_labels_adjacency(name, plot_graph=False):
-    assert os.path.exists("dataset_saved_numpy/" + name + "features.npy")
-    assert os.path.exists("dataset_saved_numpy/" + name + "adjacency.npy")
-    assert os.path.exists("dataset_saved_numpy/" + name + "labels.npy")
-    assert os.path.exists("dataset_saved_numpy/dict_genres.npy")
-    assert os.path.exists("dataset_saved_numpy/" + name + "genres_classes.npy")
-    assert os.path.exists("dataset_saved_numpy/" + name + "release_dates.npy")
+def load_features_labels_adjacency(name, train, plot_graph=False):
+    if train:
+        file_name = name + "train_"
+    else:
+        file_name = name + "test_"
 
-    features = np.load("dataset_saved_numpy/" + name + "features.npy")
-    adjacency =  np.load("dataset_saved_numpy/" + name + "adjacency.npy")
-    labels = np.load("dataset_saved_numpy/" + name  + "labels.npy")
+    assert os.path.exists("dataset_saved_numpy/" + file_name + "features.npy")
+    assert os.path.exists("dataset_saved_numpy/" + file_name + "adjacency.npy")
+    assert os.path.exists("dataset_saved_numpy/" + file_name + "labels.npy")
+    assert os.path.exists("dataset_saved_numpy/dict_genres.npy")
+    assert os.path.exists("dataset_saved_numpy/" + file_name + "genres_classes.npy")
+    assert os.path.exists("dataset_saved_numpy/" + file_name + "release_dates.npy")
+
+    features = np.load("dataset_saved_numpy/" + file_name + "features.npy")
+    adjacency =  np.load("dataset_saved_numpy/" + file_name + "adjacency.npy")
+    labels = np.load("dataset_saved_numpy/" + file_name  + "labels.npy")
     dict_genres = np.load("dataset_saved_numpy/dict_genres.npy")
-    genres_classes = np.load("dataset_saved_numpy/" + name + "genres_classes.npy")
-    release_dates = np.load("dataset_saved_numpy/" + name + "release_dates.npy")
+    genres_classes = np.load("dataset_saved_numpy/" + file_name + "genres_classes.npy")
+    release_dates = np.load("dataset_saved_numpy/" + file_name + "release_dates.npy")
 
     pygsp_graph = None
     if plot_graph:
