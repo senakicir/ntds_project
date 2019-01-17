@@ -22,9 +22,9 @@ class Net(nn.Module):
 
     def forward(self, x):
         out = self.fc1(x)
-        out = self.relu(out)
-        out = self.fc2(out)
-        return out
+        out_rep = self.relu(out)
+        out = self.fc2(out_rep)
+        return out, out_rep
 
 
 
@@ -92,7 +92,7 @@ def do_mlp(x_train, y_train,x_test, y_test,num_classes):
 
             # Forward + Backward + Optimize
             optimizer.zero_grad()  # zero the gradient buffer
-            outputs = net(images)
+            outputs, _ = net(images)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -106,7 +106,7 @@ def do_mlp(x_train, y_train,x_test, y_test,num_classes):
     total = 0
     for x, labels in test_loader:
         images = x.cuda()
-        outputs = net(images)
+        outputs, _ = net(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted.cpu() == labels).sum()
