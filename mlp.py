@@ -49,7 +49,7 @@ class MyDataset(Dataset):
         return len(self.data)
 
 class MLP():
-    def __init__(self,hidden_size, features, labels,num_epoch,batch_size,num_classes,lr=0.001, save_path="",cuda=True,seed=0):
+    def __init__(self,hidden_size, features, labels,num_epoch,batch_size,num_classes,lr=0.0001, save_path="",cuda=True,seed=0):
         self.features = features
         self.labels = labels.astype(np.int32)
         self.num_classes = num_classes
@@ -90,6 +90,9 @@ class MLP():
                 if (i+1) % 100 == 0:
                     print ('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
                            %(epoch+1, self.num_epochs, i+1, len(dataset)//self.batch_size, loss.item()))
+
+        torch.save(self.net.state_dict(), self.model_path)
+
     def load_pretrained(self):
         self.net.load_state_dict(torch.load(self.model_path))
     def classify(self, idx_test):
