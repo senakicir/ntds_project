@@ -15,14 +15,12 @@ import graph_stats as gstats
 from trainer import Trainer
 from evaluate import cross_validation, grid_search_for_param, simple_test
 
-from sklearn.manifold import spectral_embedding
 from dataloader import save_features_labels_adjacency, load_features_labels_adjacency
 import transductive as tr
 from scipy import sparse
 import time as time
 from mlp import MLP
 
-SEED = 0
 parser = argparse.ArgumentParser(description='Train image model with cross entropy loss')
 parser.add_argument('--only-features', action='store_true',
                     help="Calculate features only (Default:False)")
@@ -68,10 +66,8 @@ parser.add_argument('--train', action='store_true',
                     help="Trains all models and evaluates them using cross validation  (Default:False)")
 
 def load_parameters_and_data(args):
-    np.random.seed(SEED)
-    eigenmaps_name = "eigenmaps_"
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.with_PCA, args.remove_disconnected, args.dataset_size, args.threshold)
+    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -80,7 +76,7 @@ def load_parameters_and_data(args):
         else:
             num_classes = args.num_classes
 
-        output = save_features_labels_adjacency(normalize_features=args.with_PCA, use_PCA=args.with_PCA, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
+        output = save_features_labels_adjacency(use_PCA=args.with_PCA, use_eigenmaps=args.use_eigenmaps,rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
                                            use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train)
         if args.only_features:
             return
@@ -93,10 +89,10 @@ def load_parameters_and_data(args):
     n_data = features.shape[0]
     print("The dataset size is: {}. Genres that will be used: {}".format(n_data, genres))
 
-    return args, n_data, names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates
+    return args, n_data, names, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates
 
 def train_everything(args):
-    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+    args, n_data, file_names, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
     if args.transductive_learning:
         print('#### Applying Transductive Learning ####')
         transductive_learning(adjacency=adjacency,labels=gt_labels,genres=genres,n_data=n_data,name=file_names)
@@ -110,7 +106,7 @@ def train_everything(args):
             svm_clf = SVM(features, gt_labels, kernel='linear', seed=SEED, save_path=file_names)
             random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
-            mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
+            #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
             start = time.time()
             mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data, K=5, classes=genres, name=file_names+"svm_")
@@ -127,11 +123,10 @@ def train_everything(args):
             print('* KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
             print("KNN time", time.time()-start)
 
-            start = time.time()
-            mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, n_data, K=5, classes=genres, name=file_names+"mlp_")
-            print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
-            print("MLP time", time.time()-start)
-
+            #start = time.time()
+            #mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, n_data, K=5, classes=genres, name=file_names+"mlp_")
+            ##print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
+            #print("MLP time", time.time()-start)
         if args.gcn:
             print("Training GCN")
             gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=10000, save_path=file_names)
@@ -141,28 +136,10 @@ def train_everything(args):
             mlp_nn = MLP(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, n_data, K=5,classes=genres, name=file_names+"mlpNN_")
             print('* MLP NN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlpNN, std_error_mlpNN))
-        if args.use_eigenmaps:
-            print('############## Use Eigenmaps Adjacency ##############')
-            features_lap = spectral_embedding(adjacency,n_components=10, eigen_solver=None,
-                                random_state=SEED, eigen_tol=0.0,
-                                norm_laplacian=True)
-
-            svm_clf_lap = SVM(features_lap, gt_labels, kernel='linear', seed=SEED)
-            random_forest_clf_lap = Random_Forest(features_lap, gt_labels, n_estimators=1000, max_depth=2, seed=SEED)
-            knn_clf_lap = KNN(features_lap, gt_labels)
-
-            mean_error_svm, std_error_svm = cross_validation(svm_clf_lap, n_data, K=5,classes=genres, name=file_names+eigenmaps_name+"svm_")
-            print('* Eigenmaps, SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
-
-            mean_error_rf, std_error_rf = cross_validation(random_forest_clf_lap, n_data, K=5,classes=genres, name=file_names+eigenmaps_name+"rf_")
-            print('* Eigenmaps, Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
-
-            mean_error_knn, std_error_knn = cross_validation(knn_clf_lap, n_data, K=5,classes=genres, name=file_names+eigenmaps_name+"knn_")
-            print('* Eigenmaps, KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
 
 
 def test_everything(args):
-    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+    args, n_data, file_names, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
 
     if args.graph_statistics:
         if not os.path.exists(stat_dirname):
@@ -182,7 +159,7 @@ def test_everything(args):
             svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED, save_path=file_names)
             random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
-            mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
+            #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
             error_svm = simple_test(svm_clf, n_data, classes=genres, name=file_names+"svm_")
             print('* SVM simple test error: {:.2f}'.format(error_svm))
@@ -193,8 +170,8 @@ def test_everything(args):
             error_knn = simple_test(knn_clf, n_data, classes=genres, name=file_names+"knn_")
             print('* KNN simple test error: {:.2f}'.format(error_knn))
 
-            error_mlp = simple_test(mlp_clf, n_data, classes=genres, name=file_names+"mlp_")
-            print('* MLP cross validation error: {:.2f}'.format(error_mlp))
+            #error_mlp = simple_test(mlp_clf, n_data, classes=genres, name=file_names+"mlp_")
+            #print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
             gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000, save_path=file_names)
@@ -204,17 +181,6 @@ def test_everything(args):
             mlp_nn = MLP(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             error_mlpNN = simple_test(mlp_nn, n_data, classes=genres, name=file_names+"mlpNN_")
             print('* GCN simple test error: {:.2f}'.format(error_mlpNN))
-##should we get rid of this?
-def run_grid_search_for_optimal_param():
-    pca_name = "normalized_PCA_"
-    features_pca, gt_labels,genres, adjacency_pca, pygsp_graph_pca = load_features_labels_adjacency(pca_name)
-
-    svm_clf = SVM(kernel='poly',seed=SEED)
-    random_forest_clf = Random_Forest(n_estimators=1000, max_depth=2,seed=SEED)
-    knn_clf = KNN()
-
-    #grid_search_for_param(features_pca, gt_labels, knn_clf, "KNN", K=5, name=pca_name) #ran it and found 42
-    grid_search_for_param(features_pca, gt_labels, random_forest_clf, "Random_Forest",classes=genres, K=5, name=pca_name)
 
 def transductive_learning(adjacency,labels,genres,n_data,name):
     adjacency = sparse.csr_matrix(adjacency)

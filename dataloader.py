@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 import ast
 from scipy.spatial.distance import pdist, squareform
-from utils import remove_disconnected_nodes, generate_PCA_features, normalize_feat, uniform_random_subsample, form_file_names
+from utils import remove_disconnected_nodes, generate_PCA_features, normalize_feat, uniform_random_subsample, form_file_names, SEED
 from visualization import plot_gt_labels
+from sklearn.manifold import spectral_embedding
 import pdb
 import pygsp as pg
 import os
@@ -77,7 +78,7 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
             for ind, genre in enumerate(genres):
                 genre_count[ind]=(np.sum(subset_tracks['track', 'genre_top'] == genre))
                 ind_sort = np.argsort(genre_count)
-                genres_to_include = ind_sort[num_classes:]
+                genres_to_include = ind_sort[-num_classes:]
             our_genres = []
             for ind in genres_to_include:
                 our_genres.append(genres[ind])
@@ -135,11 +136,12 @@ def form_adjacency(features, labels, genres, rem_disconnected, threshold = 0.66,
     assert num_of_disconnected_nodes == 0
     return adjacency, features, labels, genres
 
-def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True):
+def save_features_labels_adjacency(use_PCA = True, use_eigenmaps = True, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True):
     tracks, features = csv_loader()
-    features_part_train, features_part_test, genres_gt_train, genres_gt_test, genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
-
-    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold)
+    features_part_train, features_part_test, genres_gt_train, genres_gt_test, genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size, genres =genres, num_classes=num_classes)
+    all_features = np.vstack([features_part_test, features_part_train])
+    test_size = features_part_test.shape[0]
+    name = form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold)
 
     for save_bool in [not train, train]:
         if save_bool:
@@ -151,12 +153,22 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
             genres_gt = genres_gt_test
             file_name = name + "test_" 
 
-        if (normalize_features):
-            feature_values = normalize_feat(feature_values)
         if (use_PCA):
-            feature_values = generate_PCA_features(feature_values)
+            if save_bool:
+                feature_values = normalize_feat(feature_values)
+                feature_values = generate_PCA_features(feature_values)
+            else:
+                feature_values = normalize_feat(np.vstack(all_features))
+                feature_values = generate_PCA_features(feature_values)
+                feature_values = feature_values[0:test_size]
 
         adjacency, feature_values, genres_gt, genres_classes  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
+        if (use_eigenmaps):
+            if save_bool:
+                feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
+            else:
+                adjacency_big, _, _, _  = form_adjacency(all_features, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
+                feature_values = spectral_embedding(adjacency_big,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
 
         np.save("dataset_saved_numpy/"+ file_name + "labels.npy", genres_gt)
         np.save("dataset_saved_numpy/"+ file_name + "adjacency.npy", adjacency)
@@ -164,7 +176,7 @@ def save_features_labels_adjacency(normalize_features = True, use_PCA = True, re
         np.save("dataset_saved_numpy/" + file_name + "genres_classes.npy", genres_classes)
         np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
         np.save("dataset_saved_numpy/" + file_name + "release_dates.npy", release_dates)
-        print("Dataset of size {}. Features,labels,and genres saved using prefix: {}".format(adjacency.shape[0], name[:len(name)-1]))
+        print("Dataset of size {}. Features,labels,and genres saved using prefix: {}".format(adjacency.shape[0], file_name[:len(file_name)-1]))
 
     if (return_features):
         pygsp_graph = None
