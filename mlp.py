@@ -54,7 +54,7 @@ class MLP():
         self.labels = labels.astype(np.int32)
         self.num_classes = num_classes
         self.seed = seed
-        self.num_epochs = epoch
+        self.num_epochs = num_epoch
         self.batch_size = batch_size
         self.cuda = cuda
         self.model_path = 'models/best_model_' + save_path + 'svm.sav'
