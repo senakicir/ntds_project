@@ -88,12 +88,12 @@ class GraphNeuralNet(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 class GCN():
-    def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
+    def __init__(self, nhid, dropout, adjacency, features, labels, n_class, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
         self.adjacency_unnorm = adjacency
         self.features = features
         self.nfeat = features.shape[-1]
         self.nhid = nhid
-        self.nclass = labels.shape[-1]
+        self.nclass = n_class
         self.epochs = epochs
         self.gcn = GraphNeuralNet(self.nfeat, self.nhid, self.nclass, dropout)
 
@@ -104,7 +104,7 @@ class GCN():
         self.D_norm_sparse = sp.coo_matrix(self.D_norm)
         self.adjacency_norm = self.D_norm_sparse @ sp.coo_matrix(self.adjacency_unnorm) @ self.D_norm_sparse
         self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency_norm)
-        self.labels = torch.LongTensor(labels)
+        self.labels = torch.LongTensor(labels.astype(np.int64))
 
         self.model_path = 'models/best_model_' + save_path + 'batch_size_' + str(batch_size) +'_gcn.sav'
 
