@@ -113,9 +113,9 @@ class MLP():
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     def accuracy(self, classes):
         c_m = confusion_matrix(self.labels_test, self.prediction)
-        acc_test = error_func(self.prediction, self.labels_test.numpy())
+        acc_test = error_func(self.prediction, self.labels_test)
         for i in range(len(classes)):
-            labels_count = np.sum(self.labels_test.numpy() == i)
+            labels_count = np.sum(self.labels_test == i)
             c_m[i,:] = (c_m[i,:] /labels_count)*100
         return c_m, acc_test
 
