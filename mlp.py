@@ -113,7 +113,7 @@ class MLP():
             total += labels.size(0)
             correct += (prediction.cpu() == labels).sum()
 
-        print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
+        #print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     def accuracy(self, classes):
         c_m = confusion_matrix(self.labels_test, self.prediction)
         acc_test = error_func(self.prediction, self.labels_test)

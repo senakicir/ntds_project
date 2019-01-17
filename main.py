@@ -203,7 +203,7 @@ def test_everything(args):
         if args.mlp_nn:
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             error_mlpNN = simple_test(mlp_nn, n_data, classes=genres, name=file_names+"mlpNN_")
-            print('* GCN simple test error: {:.2f}'.format(error_mlpNN))
+            print('* MLP NN simple test error: {:.2f}'.format(error_mlpNN))
 ##should we get rid of this?
 def run_grid_search_for_optimal_param():
     pca_name = "normalized_PCA_"
