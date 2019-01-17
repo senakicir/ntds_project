@@ -106,7 +106,7 @@ class MLP():
             outputs, _ = self.net(images)
             _, self.prediction = torch.max(outputs.data, 1)
             total += labels.size(0)
-            correct += (predicted.cpu() == labels).sum()
+            correct += (self.prediction.cpu() == labels).sum()
 
         print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
     def accuracy(self, classes):
