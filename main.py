@@ -173,10 +173,10 @@ def test_everything(args):
     if args.inductive_learning:
         print('#### Testing Inductive Learning ####')
         if args.additional_models:
-            svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED)
-            random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED)
-            knn_clf = KNN(features, gt_labels)
-            mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000)
+            svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED, save_path=file_names)
+            random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED, save_path=file_names)
+            knn_clf = KNN(features, gt_labels, save_path=file_names)
+            mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
             error_svm = simple_test(svm_clf, n_data, classes=genres, name=file_names+"svm_")
             print('* SVM simple test error: {:.2f}'.format(error_svm))
@@ -191,7 +191,7 @@ def test_everything(args):
             print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
-            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000)
+            gnn_clf = GCN(nhid=[750, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 100, batch_size=2000, save_path=file_names)
             error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
 
