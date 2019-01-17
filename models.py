@@ -91,7 +91,6 @@ class GCN():
     def __init__(self, nhid, dropout, adjacency, features, labels, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
         self.adjacency_unnorm = adjacency
         self.features = features
-        self.labels_onehot = labels
         self.nfeat = features.shape[-1]
         self.nhid = nhid
         self.nclass = labels.shape[-1]
@@ -106,6 +105,7 @@ class GCN():
         self.adjacency_norm = self.D_norm_sparse @ sp.coo_matrix(self.adjacency_unnorm) @ self.D_norm_sparse
         self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency_norm)
         self.labels = torch.LongTensor(np.where(self.labels_onehot)[1])
+
         self.model_path = 'models/best_model_' + save_path + 'batch_size_' + str(batch_size) +'_gcn.sav'
 
         #Create trainer

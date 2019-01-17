@@ -21,14 +21,11 @@ def basic(adjacency):
     print("Size of Largest Connected Component: ", len(giant))
     return G, N, L, deg
 
-
 def advanced(adjacency, dirname, active_plots=False):
     G, N, L, deg = basic(adjacency)
     plot_degree_distribution(deg, N, dirname, show=active_plots)
     log_plot_degree_distribution(deg, N, dirname, show=active_plots)
-
     return G, N, L, deg
-
 
 def allstats(adjaceny, dirname, active_plots=False):
     G, N, L, deg = advanced(adjaceny, dirname, active_plots)

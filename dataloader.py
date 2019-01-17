@@ -37,6 +37,10 @@ def load(filename):
         tracks['set', 'subset'] = tracks['set', 'subset'].astype(
                 pd.api.types.CategoricalDtype(SUBSETS, ordered=True))
 
+        SPLITS = ('training', 'test', 'validation')
+        tracks['set', 'split'] = tracks['set', 'split'].astype(
+                pd.api.types.CategoricalDtype(SPLITS, ordered=True))
+
         COLUMNS = [('track', 'genre_top'), ('track', 'license'),
                    ('album', 'type'), ('album', 'information'),
                    ('artist', 'bio')]
@@ -58,29 +62,32 @@ def csv_loader():
 
     return tracks, features
 
-def select_features(tracks, features, use_features = ['mfcc'], dataset_size = None, genres = None, num_classes=None):
-    if dataset_size:
-        small = tracks[tracks['set', 'subset'] == dataset_size]
+def select_features(tracks, features, train, use_features = ['mfcc'], dataset_size = None, genres = None, num_classes=None):
+    if not dataset_size:
+        dataset_size = "small"
+    if train:
+        subset_tracks = tracks[np.logical_and(np.logical_or(tracks['set', 'split'] == "training", tracks['set', 'split'] == "validation"), tracks['set', 'subset'] == dataset_size)]
     else:
-        small = tracks
+        subset_tracks = tracks[np.logical_and(tracks['set', 'split'] == "test", tracks['set', 'subset'] == dataset_size)]
+
+    #subset_tracks = tracks[tracks['set', 'subset'] == dataset_size]
 
     if genres is None:
-        genres = list(small.track.genre_top.dropna().unique())
+        genres = list(subset_tracks.track.genre_top.dropna().unique())
         if not(num_classes is None):
             genres = genres[:num_classes]
 
-    subset = small.loc[small['track', 'genre_top'].isin(genres)]
+    subset = subset_tracks.loc[subset_tracks['track', 'genre_top'].isin(genres)]
     # Takes a subset of features based on the tracks found in the variable subset
-    small_features = features[features.index.isin(subset.index)]
+    subset_features = features[features.index.isin(subset.index)]
     #features_part_mfcc = small_features.loc[:,('mfcc', ('median', 'mean'), slice('01','12'))]
     #features_part_chroma = small_features.loc[:,('chroma_cens', ('median', 'mean'), slice('01','05'))] # Take chroma column as features
     #features_part = features_part_mfcc.join(features_part_chroma)
-    features_part = small_features.loc[:,use_features].values
+    features_part = subset_features.loc[:,use_features].values
     release_dates = subset['album', 'date_released'].values
 
     #save labels
     genres_gt = np.zeros([features_part.shape[0]],dtype=np.int8)-1
-    genres_gt_onehot = np.zeros([features_part.shape[0],len(genres)],dtype=np.int8)
     dict_genres = {}
     for ind in range(0, len(genres)):
         temp = (subset['track', 'genre_top'] == genres[ind]).to_frame().values.squeeze()
@@ -88,75 +95,75 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
         dict_genres[genres[ind]] = int(ind)
     if -1 in genres_gt:
         raise ValueError('Not all tracks were labeled')
-    genres_gt_onehot[np.arange(features_part.shape[0]),genres_gt] = 1
-    return features_part, genres_gt, genres_gt_onehot,genres, dict_genres, release_dates
+    return features_part, genres_gt, genres, dict_genres, release_dates
 
 
-def form_adjacency(features, labels, labels_one_hot, rem_disconnected, threshold = 0.66, metric ='correlation'):
+def form_adjacency(features, labels, genres, rem_disconnected, threshold = 0.66, metric ='correlation'):
     distances = pdist(features, metric=metric) # Use cosine equation to calculate distance
     kernel_width = distances.mean()
     weights = np.exp(-distances**2 / kernel_width**2) # Use Gaussian function to calculate weights
     weights[weights < threshold] = 0
     adjacency = squareform(weights)
     if rem_disconnected:
-        adjacency, features, labels, labels_one_hot = remove_disconnected_nodes(adjacency, features, labels, labels_one_hot)
+        adjacency, features, labels = remove_disconnected_nodes(adjacency, features, labels)
+        for i in range(len(genres)):
+            labels_count = np.sum(labels == i)
+            if labels_count == 0:
+                removed_genre = genres.pop(i)
+                print("Genre ", removed_genre, " was removed.")
     num_of_disconnected_nodes = np.sum(np.sum(adjacency, axis=0) == 0)
     assert num_of_disconnected_nodes == 0
-    return adjacency, features, labels, labels_one_hot
+    return adjacency, features, labels, genres
 
-def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False):
+def save_features_labels_adjacency(normalize_features = True, use_PCA = True, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True):
     tracks, features = csv_loader()
-    #feature_values, genres_gt,genres_gt_onehot,genres_classes, dict_genres = select_features(tracks, features, use_features = ['mfcc'], dataset_size = 'small', genres = ['Hip-Hop', 'Rock'], num_classes=num_classes)
-    feature_values, genres_gt, genres_gt_onehot, genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
+    feature_values, genres_gt, genres_classes, dict_genres, release_dates = select_features(tracks, features, train, use_features = use_features, dataset_size = dataset_size,genres =genres, num_classes=num_classes)
 
-    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold)
+    name = form_file_names(normalize_features, use_PCA, rem_disconnected, dataset_size, threshold, train)
     if (normalize_features):
         feature_values = normalize_feat(feature_values)
     if (use_PCA):
         feature_values = generate_PCA_features(feature_values)
 
-    adjacency, feature_values, genres_gt, genres_gt_onehot  = form_adjacency(feature_values, genres_gt, genres_gt_onehot, rem_disconnected,  threshold = threshold, metric = metric)
+    adjacency, feature_values, genres_gt, genres_classes  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
 
-    np.save("dataset_saved_numpy/labels.npy", genres_gt)
-    np.save("dataset_saved_numpy/labels_onehot.npy",genres_gt_onehot)
+    np.save("dataset_saved_numpy/"+ name + "labels.npy", genres_gt)
     np.save("dataset_saved_numpy/"+ name + "adjacency.npy", adjacency)
     np.save("dataset_saved_numpy/"+ name + "features.npy", feature_values)
-    np.save("dataset_saved_numpy/genres_classes.npy", genres_classes)
+    np.save("dataset_saved_numpy/" + name + "genres_classes.npy", genres_classes)
     np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
-    np.save("dataset_saved_numpy/release_dates.npy", release_dates)
+    np.save("dataset_saved_numpy/" + name + "release_dates.npy", release_dates)
     print("Dataset of size {}. Features,labels,and genres saved using prefix: {}".format(adjacency.shape[0], name[:len(name)-1]))
 
     if (return_features):
         pygsp_graph = None
         if plot_graph:
-            subsampled_adjacency, genres_gt, _ = uniform_random_subsample(adjacency, genres_gt, genres_gt_onehot)
+            subsampled_adjacency, genres_gt = uniform_random_subsample(adjacency, genres_gt)
             pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
             pygsp_graph.set_coordinates('spring') #for visualization
             plot_gt_labels(pygsp_graph, genres_gt, name)
-        return feature_values, genres_gt, genres_gt_onehot, genres_classes, adjacency, pygsp_graph, release_dates
+        return feature_values, genres_gt, genres_classes, adjacency, pygsp_graph, release_dates
     return name
 
 def load_features_labels_adjacency(name, plot_graph=False):
     assert os.path.exists("dataset_saved_numpy/" + name + "features.npy")
     assert os.path.exists("dataset_saved_numpy/" + name + "adjacency.npy")
-    assert os.path.exists("dataset_saved_numpy/labels.npy")
-    assert os.path.exists("dataset_saved_numpy/labels_onehot.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "labels.npy")
     assert os.path.exists("dataset_saved_numpy/dict_genres.npy")
-    assert os.path.exists("dataset_saved_numpy/genres_classes.npy")
-    assert os.path.exists("dataset_saved_numpy/release_dates.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "genres_classes.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "release_dates.npy")
 
     features = np.load("dataset_saved_numpy/" + name + "features.npy")
     adjacency =  np.load("dataset_saved_numpy/" + name + "adjacency.npy")
-    labels = np.load("dataset_saved_numpy/labels.npy")
-    labels_onehot = np.load("dataset_saved_numpy/labels_onehot.npy")
+    labels = np.load("dataset_saved_numpy/" + name  + "labels.npy")
     dict_genres = np.load("dataset_saved_numpy/dict_genres.npy")
-    genres_classes = np.load("dataset_saved_numpy/genres_classes.npy")
-    release_dates = np.load("dataset_saved_numpy/release_dates.npy")
+    genres_classes = np.load("dataset_saved_numpy/" + name + "genres_classes.npy")
+    release_dates = np.load("dataset_saved_numpy/" + name + "release_dates.npy")
 
     pygsp_graph = None
     if plot_graph:
-        subsampled_adjacency, genres_gt, _ = uniform_random_subsample(adjacency, labels, labels_onehot)
+        subsampled_adjacency, genres_gt, _ = uniform_random_subsample(adjacency, labels)
         pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
         pygsp_graph.set_coordinates('spring') #for visualization
         plot_gt_labels(pygsp_graph, genres_gt, name)
-    return features, labels, labels_onehot, genres_classes, adjacency,  pygsp_graph, release_dates
+    return features, labels, genres_classes, adjacency,  pygsp_graph, release_dates

@@ -2,7 +2,10 @@ import torch
 import torch.nn as nn
 import torchvision.datasets as dsets
 import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
 
+import numpy as np
+import pdb
 
 # Hyper Parameters
 hidden_size = 500
@@ -23,10 +26,7 @@ class Net(nn.Module):
         out = self.fc2(out)
         return out
 
-from torch.utils.data import Dataset, DataLoader
 
-import numpy as np
-import pdb
 
 class MyDataset(Dataset):
     def __init__(self, data, target, transform=None):
@@ -58,10 +58,8 @@ def do_mlp(x_train, y_train,x_test, y_test,num_classes):
     #                            train=False,
     #                            transform=transforms.ToTensor())
     input_size = x_train.shape[1]
-    pdb.set_trace()
     y_train = y_train.astype(np.int32)
     y_test = y_test.astype(np.int32)
-    pdb.set_trace()
     train_dataset = MyDataset(x_train, y_train)
 
     test_dataset = MyDataset(x_test, y_test)
@@ -117,4 +115,3 @@ def do_mlp(x_train, y_train,x_test, y_test,num_classes):
 
     # Save the Model
     torch.save(net.state_dict(), 'model.pkl')
-
