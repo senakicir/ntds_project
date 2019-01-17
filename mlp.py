@@ -89,7 +89,7 @@ class MLP():
 
                 if (i+1) % 100 == 0:
                     print ('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
-                           %(epoch+1, self.num_epochs, i+1, len(self.dataset)//self.batch_size, loss.item()))
+                           %(epoch+1, self.num_epochs, i+1, len(dataset)//self.batch_size, loss.item()))
     def load_pretrained(self):
         self.net.load_state_dict(torch.load(self.model_path))
     def classify(self, idx_test):
