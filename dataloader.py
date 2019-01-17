@@ -73,7 +73,11 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     if genres is None:
         genres = list(subset_tracks.track.genre_top.dropna().unique())
         if not(num_classes is None):
-            genres = genres[:num_classes]
+            genre_count = np.zeros([len(genres,)])
+            for ind, genre in enumerate(genres):
+                genre_count[ind]=(np.sum(subset_tracks['track', 'genre_top'] == genre)
+                ind_sort = np.argsort(genre_count)
+
 
     subset = subset_tracks.loc[subset_tracks['track', 'genre_top'].isin(genres)]
     # Takes a subset of features based on the tracks found in the variable subset
