@@ -38,8 +38,10 @@ def form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, thre
     if not os.path.exists("models"): os.makedirs("models")
     if not os.path.exists("visualizations"): os.makedirs("visualizations")
     if not os.path.exists("dataset_saved_numpy"): os.makedirs("dataset_saved_numpy")
-
-    name = prefix
+    if prefix =="":
+        name = prefix
+    else:
+         name = prefix + "_"
     if use_PCA:
         name += "PCA_"
     if rem_disconnected:
