@@ -126,10 +126,6 @@ def train_everything(args):
             print('* KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
             print("KNN time", time.time()-start)
 
-            #start = time.time()
-            #mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, indx_train, K=5, classes=genres, name=file_names+"mlp_")
-            ##print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
-            #print("MLP time", time.time()-start)
         if args.gcn:
             print("Training GCN")
             start = time.time()
@@ -139,10 +135,12 @@ def train_everything(args):
 
         if args.gcn_khop:
             print("Training GCN K-Hop")
+            start = time.time()
             gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency=adjacency, features=features, labels=gt_labels,
                                n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01,
                                weight_decay=5e-4, epochs=300, batch_size=10000, save_path=file_names)
             train_gcn(gnn_clf, indx_train, name=file_names + "gnn_khop_")
+            print("GCN K-Hop time", time.time()-start)
 
         if args.mlp_nn:
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=100,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
@@ -171,7 +169,6 @@ def test_everything(args):
             svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED, save_path=file_names)
             random_forest_clf = Random_Forest(features, gt_labels, n_estimators=100, max_depth=20,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
-            #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
             error_svm = simple_test(svm_clf, indx_test, classes=genres, name=file_names+"svm_")
             print('* SVM simple test error: {:.2f}'.format(error_svm))
@@ -181,9 +178,6 @@ def test_everything(args):
 
             error_knn = simple_test(knn_clf, indx_test, classes=genres, name=file_names+"knn_")
             print('* KNN simple test error: {:.2f}'.format(error_knn))
-
-            #error_mlp = simple_test(mlp_clf, indx_test, classes=genres, name=file_names+"mlp_")
-            #print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
             gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)

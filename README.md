@@ -32,7 +32,7 @@ The different arguments that can be passed to `main.py`:
 - `--graph-statistics`: Report Graph Statistics (Default:None)
 - `--genres` : List of genres used for classification (Default: None)
 - `--num-classes` : Specify the number of top genres used for classification (Default: None)
-- `--threshold` : Threshold for the weights of edges (Default: 0.66)
+- `--threshold` : Threshold for the weights of edges (Default: 0.95)
 - `--plot-graph`: Plot the Graph using PyGSP (Default: False)
 - `--dataset-size`: Size of dataset used (Default: 'small')
 - `--distance-metric`: Metric used to measure distance between features (Default: 'correlation')
@@ -45,26 +45,51 @@ The different arguments that can be passed to `main.py`:
 - `--mlp-nn`: Run MLP using Pytorch (Default: False)
 - `--use-mlp-features`: Use output of MLP as features to build adjacency (Default: False)
 - `--additional-models`: Run SVM, RF, KNN
+- `--remove-disconnected`: Removes disconnected nodes (Default: False)
+- `--train`: Train the chosen models (Default: False)
+- `--prefix`: Add prefix to file names (Default: "")
 - `--PCA-dim`: PCA dimensions (Default: 10)
 - `--use-cpu`: Use CPU instead of cuda (Default: False)
-
 
 Note that you should apply at least one of the two types of learning (Transductive or Inductive)
 
 To only calculate and save the features and labels with default arguments:
 ```
-python main.py --only-features
+python main.py --only-features --threshold 0.9  --dataset-size medium --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120
 ```
 
 To run genre classification only by loading previously saved features:
 ```
-python main.py --inductive-learning --transductive-learning
+python main.py --threshold 0.9  --dataset-size medium --inductive-learning --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120 --additional-models --train
 ```
 
 To calculate and save the features and then continue classification:
 ```
-python main.py --recalculate-features --genres 'Hip-Hop' 'Rock' --threshold 0.66 --inductive-learning --transductive-learning
+python main.py --threshold 0.9  --dataset-size medium --inductive-learning --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120 --additional-models --train --recalculate-features --gcn --gcn_khop
 ```
+
+### Using MLP Features to get better features and adjacency
+
+First, train an MLP on the training dataset:
+```
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --train --remove-disconnected --num-classes 8 --prefix mlpFeatures --recalculate-features --with-PCA --PCA-dim 120
+```
+
+Test your trained MLP:
+```
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120
+```
+
+Second, get new features by passing them through trained MLP and train the classification using them
+```
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --train --recalculate-features --gcn --gcn_khop
+```
+
+Test the trained methods:
+```
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --gcn --gcn_khop
+```
+
 ## Transductive Learning Methods
 This type of learning contains 'Graph-Based Semi-Supervised Learning' algorithms
 

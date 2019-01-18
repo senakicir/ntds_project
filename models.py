@@ -64,31 +64,6 @@ class GraphConvolution(Module):
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
 
-# class GraphNeuralNet(torch.nn.Module):
-#     def __init__(self, nfeat, nhid, nclass, dropout):
-#         super(GraphNeuralNet, self).__init__()
-#
-#         self.gc1 = GraphConvolution(nfeat, nhid[0])
-#         self.bn1 = BatchNorm1d(nhid[0])
-#         self.gc2 = GraphConvolution(nhid[0], nhid[1])
-#         self.bn2 = BatchNorm1d(nhid[1])
-#         self.gc3 = GraphConvolution(nhid[1], nclass)
-#         self.dropout = dropout
-#
-#         self.model = OrderedDict([
-#             ("layer_one", self.gc1),
-#             ("layer_two", self.gc2),
-#             ("layer_three", self.gc3)])
-#
-#     def forward(self, x, adj):
-#         x = F.relu(self.bn1(self.gc1(x, adj)))
-#         x = F.dropout(x, self.dropout, training=self.training)
-#         x = F.relu(self.bn2(self.gc2(x, adj)))
-#         x = F.dropout(x, self.dropout, training=self.training)
-#         x = self.gc3(x, adj)
-#         return F.log_softmax(x, dim=1)
-
-
 class GraphNeuralNet(torch.nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout):
         super(GraphNeuralNet, self).__init__()
@@ -286,7 +261,7 @@ class SVM():
     def load_pretrained(self):
         #Load a pretrained model to test
         self.clf = joblib.load(self.model_path)
-    
+
     def save_model(self):
         joblib.dump(self.clf, self.model_path)
 

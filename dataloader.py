@@ -55,21 +55,12 @@ def csv_loader():
     tracks = load('dataset/tracks.csv') #Read tracks.csv
     features = load('dataset/features.csv') # Read features.csv
 
-    # MAYBE WE WONT NEED THESE BUT I KEPT THEM ANYWAY
-
-    # Merges feature dataframe with genre_top column in tracks based on track_id
-    #merged_full = pd.merge(features, tracks['track', 'genre_top'].to_frame(), on="track_id")
-    # Separates the 16 top genres into columns with binary encoding
-    #merged_full_binary = merged_full.join(pd.get_dummies(merged_full.pop(('track', 'genre_top'))))
-
     return tracks, features
 
 def select_features(tracks, features, use_features = ['mfcc'], dataset_size = None, genres = None, num_classes=None):
     if not dataset_size:
         dataset_size = "small"
 
-    #train_ind = tracks[np.logical_and(tracks['set', 'subset'] == dataset_size, (np.logical_or(tracks['set', 'split'] == "training", tracks['set', 'split'] == "validation")))]
-    #test_ind = tracks[np.logical_and(tracks['set', 'subset'] == dataset_size, (tracks['set', 'split'] == "test"))]
     subset_tracks = tracks[tracks['set', 'subset'] == dataset_size]
 
     if genres is None:
@@ -89,11 +80,7 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     subset = subset_tracks.loc[subset_tracks['track', 'genre_top'].isin(genres)]
     # Takes a subset of features based on the tracks found in the variable subset
     subset_features = features[features.index.isin(subset.index)].loc[:,use_features].values
-    #features_part_mfcc = small_features.loc[:,('mfcc', ('median', 'mean'), slice('01','12'))]
-    #features_part_chroma = small_features.loc[:,('chroma_cens', ('median', 'mean'), slice('01','05'))] # Take chroma column as features
-    #features_part = features_part_mfcc.join(features_part_chroma)
 
-    #features_part = subset_features
     release_dates = subset['album', 'date_released'].values
 
     #save labels
@@ -104,18 +91,9 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     bool_test = subset['set', 'split'] == "test"
     indx_train = np.argwhere(bool_train == True).squeeze()
     indx_test = np.argwhere(bool_test == True).squeeze()
-    #subset_train = subset[bool_train]
-    #subset_test = subset[bool_test]
 
-    #features_part_train = subset_features[subset_features.index.isin(subset_train.index)].loc[:,use_features].values
-    #features_part_test = subset_features[subset_features.index.isin(subset_test.index)].loc[:,use_features].values
-
-    #genres_gt_train = np.zeros([features_part_train.shape[0]],dtype=np.int8)-1
-    #genres_gt_test = np.zeros([features_part_test.shape[0]],dtype=np.int8)-1
     genres_gt = np.zeros([subset_features.shape[0]],dtype=np.int8)-1
     for ind in range(0, len(genres)):
-        #temp = (subset_train['track', 'genre_top'] == genres[ind]).to_frame().values.squeeze()
-        #genres_gt_train[temp] = dict_genres[genres[ind]]
         temp = (subset['track', 'genre_top'] == genres[ind]).to_frame().values.squeeze()
         genres_gt[temp] = dict_genres[genres[ind]]
 
