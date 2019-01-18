@@ -34,12 +34,12 @@ def uniform_random_subsample(adjacency, genres_gt, subsampling_percentage=0.10):
     genres_gt = genres_gt[shuffled_ind_subsampled]
     return adjacency, genres_gt
 
-def form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp):
+def form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp,prefix):
     if not os.path.exists("models"): os.makedirs("models")
     if not os.path.exists("visualizations"): os.makedirs("visualizations")
     if not os.path.exists("dataset_saved_numpy"): os.makedirs("dataset_saved_numpy")
 
-    name = ""
+    name = prefix
     if use_PCA:
         name += "PCA_"
     if rem_disconnected:

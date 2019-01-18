@@ -66,10 +66,12 @@ parser.add_argument('--remove-disconnected', action='store_true',
                     help="Remove outliers (Default:False)")
 parser.add_argument('--train', action='store_true',
                     help="Trains all models and evaluates them using cross validation  (Default:False)")
+parser.add_argument('--prefix', type=str, default="None",
+                    help="Add prefix to fileName")
 
 def load_parameters_and_data(args):
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,args.use_mlp_features)
+    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,args.use_mlp_features,args.prefix)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -79,7 +81,7 @@ def load_parameters_and_data(args):
             num_classes = args.num_classes
 
         output = save_features_labels_adjacency(use_PCA=args.with_PCA, use_eigenmaps=args.use_eigenmaps, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
-                                           use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train, use_mlp=args.use_mlp_features,use_cpu=args.use_cpu)
+                                           use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train, use_mlp=args.use_mlp_features,use_cpu=args.use_cpu,prefix=args.prefix)
         if args.only_features:
             return
 
@@ -184,7 +186,7 @@ def transductive_learning(args):
     print('#### Applying Transductive Learning ####')
     _, _, name, _, _, _, genres, _, _, _ = load_parameters_and_data(args) #to save
     labels, adjacency, idx_test, idx_tr = load_transductive_data(name)
-    
+
     adjacency = sparse.csr_matrix(adjacency)
 
     lgc = tr.LGC(graph=adjacency,y=labels,alpha=0.50,max_iter=30)
