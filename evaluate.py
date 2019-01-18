@@ -9,13 +9,14 @@ from sklearn.metrics import confusion_matrix
 import copy
 import time as time
 
-def cross_validation(model_ori, n_data, classes, K=5, name = ""):
-    batch_size = n_data//K
+def cross_validation(model_ori, indx, classes, K=5, name = ""):
+    batch_size = len(indx)//K
 
-    shuffled_ind = np.random.permutation(n_data)
+    shuffled_ind = np.random.permutation(indx)
 
     errors = np.zeros([K,])
     confusion_matrices = np.zeros([K, len(classes), len(classes)])
+    prev_error = 100
     for k in range(K):
         model = copy.deepcopy(model_ori)
         model.reset()
@@ -25,6 +26,9 @@ def cross_validation(model_ori, n_data, classes, K=5, name = ""):
         model.train(idx_tr)
         model.classify(idx_test)
         confusion_matrices[k, :, :], errors[k] = model.accuracy(classes)
+        if errors[k] < prev_error:
+            prev_error = errors[k]
+            model.save_model()
         #print('Iter {0:d} Percentage Error: {1:.2f}'.format(k, errors[k]))
 
     mean_error = np.mean(errors)
@@ -33,6 +37,8 @@ def cross_validation(model_ori, n_data, classes, K=5, name = ""):
     plot_confusion_matrix(overall_confusion_matrix, classes, name)
     return mean_error, std_error
 
+def train_gcn(model, idx_train, classes, name = ""):
+    model.train(idx_train)
 
 def evaluate_transductive(model_ori, idx_train, idx_test, classes, name = ""):
     model = copy.deepcopy(model_ori)
@@ -45,11 +51,11 @@ def evaluate_transductive(model_ori, idx_train, idx_test, classes, name = ""):
     return error
 
 
-def simple_test(model_ori, n_data, classes, name = ""):
+def simple_test(model_ori, indx, classes, name = ""):
     model = copy.deepcopy(model_ori)
     model.load_pretrained()
 
-    idx_test = np.array(list(range(n_data)))
+    idx_test = indx
     model.classify(idx_test)
 
     confusion_matrix, error = model.accuracy(classes)
