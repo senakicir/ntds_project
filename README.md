@@ -29,6 +29,7 @@ pip install -r requirements.txt
 The different arguments that can be passed to `main.py`:
 - `--recalculate-features` : Calculates and saves features and then continues classification (Default: False)
 - `--only-features` : Only calculates and saves features (Default: False)
+- `--graph-statistics`: Report Graph Statistics (Default:None)
 - `--genres` : List of genres used for classification (Default: None)
 - `--num-classes` : Number of classes randomly chosen for classification (Default: None)
 - `--threshold` : Threshold for the weights of edges (Default: 0.66)
@@ -39,6 +40,7 @@ The different arguments that can be passed to `main.py`:
 - `--use-eigenmaps`: Use eigenmaps (Default:False)
 - `--transductive-learning`: Apply Transductive Learning (Default:False)
 - `--inductive-learning`: Apply Inductive Learning (Default:False)
+- `--gcn`: Run GCN (Default: False)
 
 Note that you should apply at least one of the two types of learning (Transductive or Inductive)
 

@@ -13,7 +13,7 @@ from error import error_func
 from graph_analysis import Our_Graph
 import graph_stats as gstats
 from trainer import Trainer
-from evaluate import cross_validation, simple_test, evaluate_transductive
+from evaluate import cross_validation, simple_test, evaluate_transductive, train_gcn
 
 from dataloader import save_features_labels_adjacency, load_features_labels_adjacency
 import transductive as tr
