@@ -106,7 +106,7 @@ def train_everything(args):
         #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
         #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
         if args.additional_models:
-            #svm_clf = SVM(features, gt_labels, kernel='linear', seed=SEED, save_path=file_names)
+            svm_clf = SVM(features, gt_labels, kernel='linear', seed=SEED, save_path=file_names)
             random_forest_clf = Random_Forest(features, gt_labels, n_estimators=100, max_depth=20,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
             #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
@@ -168,13 +168,13 @@ def test_everything(args):
     if args.inductive_learning:
         print('#### Testing Inductive Learning ####')
         if args.additional_models:
-            #svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED, save_path=file_names)
+            svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED, save_path=file_names)
             random_forest_clf = Random_Forest(features, gt_labels, n_estimators=100, max_depth=20,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
             #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
-            #error_svm = simple_test(svm_clf, indx_test, classes=genres, name=file_names+"svm_")
-            #print('* SVM simple test error: {:.2f}'.format(error_svm))
+            error_svm = simple_test(svm_clf, indx_test, classes=genres, name=file_names+"svm_")
+            print('* SVM simple test error: {:.2f}'.format(error_svm))
 
             error_rf = simple_test(random_forest_clf, indx_test, classes=genres, name=file_names+"rf_")
             print('* Random Forest simple test error: {:.2f}'.format(error_rf))
