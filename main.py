@@ -107,15 +107,15 @@ def train_everything(args):
         #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
         #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
         if args.additional_models:
-            svm_clf = SVM(features, gt_labels, kernel='linear', seed=SEED, save_path=file_names)
-            random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED, save_path=file_names)
+            #svm_clf = SVM(features, gt_labels, kernel='linear', seed=SEED, save_path=file_names)
+            random_forest_clf = Random_Forest(features, gt_labels, n_estimators=100, max_depth=20,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
             #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
-            start = time.time()
-            mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data, K=5, classes=genres, name=file_names+"svm_")
-            print('* SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
-            print("SVM time", time.time()-start)
+            #start = time.time()
+            #mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data, K=5, classes=genres, name=file_names+"svm_")
+            #print('* SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
+            #print("SVM time", time.time()-start)
 
             start = time.time()
             mean_error_rf, std_error_rf = cross_validation(random_forest_clf, n_data, K=5,classes=genres, name=file_names+"rf_")
@@ -129,7 +129,7 @@ def train_everything(args):
 
             #start = time.time()
             #mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, n_data, K=5, classes=genres, name=file_names+"mlp_")
-            ##print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
+            #print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
             #print("MLP time", time.time()-start)
         if args.gcn:
             print("Training GCN")
@@ -170,7 +170,7 @@ def test_everything(args):
         print('#### Testing Inductive Learning ####')
         if args.additional_models:
             #svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED, save_path=file_names)
-            random_forest_clf = Random_Forest(features, gt_labels, n_estimators=1000, max_depth=2,seed=SEED, save_path=file_names)
+            random_forest_clf = Random_Forest(features, gt_labels, n_estimators=100, max_depth=20,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
             #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 

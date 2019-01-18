@@ -384,7 +384,7 @@ class Random_Forest():
         self.features = features
         self.labels = labels
         self.n_estimators = n_estimators
-        self.n_estimators = max_depth
+        self.max_depth = max_depth
         self.clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,random_state=seed)
         self.model_path = 'models/best_model_' + save_path + 'rf.sav'
 
