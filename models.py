@@ -98,8 +98,7 @@ class GraphNeuralNet(torch.nn.Module):
         self.dropout = dropout
         self.model = OrderedDict([
             ("layer_one", self.gc1),
-            ("layer_two", self.gc2),
-            ("layer_three", self.gc3)])
+            ("layer_two", self.gc2)])
 
 
     def forward(self, x, adj):
