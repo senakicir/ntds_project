@@ -139,6 +139,9 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
     all_features = np.vstack([features_part_test, features_part_train])
     all_labels = np.concatenate([genres_gt_test, genres_gt_train])
     idx_test = np.array(list(range(0,features_part_test.shape[0])))
+    if (use_PCA):
+        all_features = normalize_feat(all_features)
+        all_features = generate_PCA_features(all_features, PCA_dim)
     adjacency_big, _, all_labels, _,  = form_adjacency(all_features, all_labels, genres_classes, rem_disconnected, threshold = threshold, metric = metric)
 
     np.save("dataset_saved_numpy/"+ name + "all_labels.npy", all_labels)
@@ -159,9 +162,7 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
                 feature_values = normalize_feat(feature_values)
                 feature_values = generate_PCA_features(feature_values, PCA_dim)
             else:
-                temp_feat = normalize_feat(all_features)
-                temp_feat = generate_PCA_features(temp_feat, PCA_dim)
-                feature_values = temp_feat[idx_test, :]
+                feature_values = all_features[idx_test, :]
 
         if use_mlp:
             mlp_name = form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp)
