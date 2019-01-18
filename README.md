@@ -41,8 +41,13 @@ The different arguments that can be passed to `main.py`:
 - `--transductive-learning`: Apply Transductive Learning (Default:False)
 - `--inductive-learning`: Apply Inductive Learning (Default:False)
 - `--gcn`: Run GCN (Default: False)
+- `--gcn_khop`: Run GCN KHOP (Default: False)
+- `--mlp-nn`: Run MLP using Pytorch (Default: False)
+- `--use-mlp-features`: Use output of MLP as features to build adjacency (Default: False)
+- `--additional-models`: Run SVM, RF, KNN
 - `--PCA-dim`: PCA dimensions (Default: 10)
--
+- `--use-cpu`: Use CPU instead of cuda (Default: False)
+
 
 Note that you should apply at least one of the two types of learning (Transductive or Inductive)
 
