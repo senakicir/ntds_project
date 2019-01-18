@@ -33,6 +33,8 @@ parser.add_argument('--graph-statistics', type=str, default=None,
                     help="Report Graph Statistics (Default:False)")
 parser.add_argument('--with-PCA', action='store_true',
                     help="Apply PCA to features (Default:False)")
+parser.add_argument('--PCA-dim', type=int, default=10,
+                    help="Choose the number of dimensions to reduce to with the PCA")
 parser.add_argument('--use-eigenmaps', action='store_true',
                     help="Use eigenmaps (Default:False)")
 parser.add_argument('--genres', default=None, nargs='+', type=str,
@@ -69,7 +71,7 @@ parser.add_argument('--train', action='store_true',
 
 def load_parameters_and_data(args):
     stat_dirname = "graph_stats"
-    names = form_file_names(args.with_PCA, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,args.use_mlp_features)
+    names = form_file_names(args.with_PCA, args.PCA_dim, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,args.use_mlp_features)
 
     if args.recalculate_features or args.only_features:
         print("Calculating Features ...")
@@ -78,7 +80,7 @@ def load_parameters_and_data(args):
         else:
             num_classes = args.num_classes
 
-        output = save_features_labels_adjacency(use_PCA=args.with_PCA, use_eigenmaps=args.use_eigenmaps, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
+        output = save_features_labels_adjacency(use_PCA=args.with_PCA, PCA_dim = args.PCA_dim, use_eigenmaps=args.use_eigenmaps, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
                                            use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train, use_mlp=args.use_mlp_features,use_cpu=args.use_cpu)
         if args.only_features:
             return
