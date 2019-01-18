@@ -24,9 +24,13 @@ def remove_disconnected_nodes(adjacency, features, labels,indx_train, indx_test)
     new_adj = adjacency[connected_nodes_ind, :][:, connected_nodes_ind]
     new_feat = features[connected_nodes_ind, :]
     labels = labels[connected_nodes_ind]
-    indx_train = np.intersect1d(connected_nodes_ind, indx_train)
-    indx_test = np.intersect1d(connected_nodes_ind, indx_test)
-    return new_adj, new_feat, labels,indx_train,indx_test
+    temp = np.array([0]*len(labels))
+    temp[indx_train] = 1
+    temp[indx_test] = -1
+    temp = temp[connected_nodes_ind]
+    indx_train = np.argwhere(temp == 1).squeeze()
+    indx_test =  np.argwhere(temp == -1).squeeze()
+    return new_adj, new_feat, labels, indx_train, indx_test
 
 def uniform_random_subsample(adjacency, genres_gt, subsampling_percentage=0.10):
     n_nodes = adjacency.shape[0]
