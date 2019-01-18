@@ -115,8 +115,8 @@ class GraphNeuralNetKHop(torch.nn.Module):
 
         self.gc1 = GraphConvolution(nfeat, nhid[0])
         self.bn1 = BatchNorm1d(nhid[0])
-        self.gc2 = GraphConvolution(nhid[0], nclass)
-        self.lin1 = Linear(nclass*2, nclass)
+        self.gc2 = GraphConvolution(nhid[0], 32)
+        self.lin1 = Linear(32*2, nclass)
         self.dropout = dropout
         self.model = OrderedDict([
             ("layer_one", self.gc1),
