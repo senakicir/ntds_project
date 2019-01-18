@@ -9,10 +9,10 @@ from sklearn.metrics import confusion_matrix
 import copy
 import time as time
 
-def cross_validation(model_ori, n_data, classes, K=5, name = ""):
-    batch_size = n_data//K
+def cross_validation(model_ori, indx, classes, K=5, name = ""):
+    batch_size = len(indx)//K
 
-    shuffled_ind = np.random.permutation(n_data)
+    shuffled_ind = np.random.permutation(indx)
 
     errors = np.zeros([K,])
     confusion_matrices = np.zeros([K, len(classes), len(classes)])
@@ -49,11 +49,11 @@ def evaluate_transductive(model_ori, idx_train, idx_test, classes, name = ""):
     return error
 
 
-def simple_test(model_ori, n_data, classes, name = ""):
+def simple_test(model_ori, indx, classes, name = ""):
     model = copy.deepcopy(model_ori)
     model.load_pretrained()
 
-    idx_test = np.array(list(range(n_data)))
+    idx_test = indx
     model.classify(idx_test)
 
     confusion_matrix, error = model.accuracy(classes)

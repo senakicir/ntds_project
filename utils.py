@@ -19,12 +19,18 @@ def normalize_feat(features):
     normalized_feat = (features-mean_feat)/std_feat
     return normalized_feat
 
-def remove_disconnected_nodes(adjacency, features, labels):
+def remove_disconnected_nodes(adjacency, features, labels,indx_train, indx_test):
     connected_nodes_ind = (np.sum(adjacency, axis=0) != 0)
     new_adj = adjacency[connected_nodes_ind, :][:, connected_nodes_ind]
     new_feat = features[connected_nodes_ind, :]
+    temp = np.array([0]*len(labels))
     labels = labels[connected_nodes_ind]
-    return new_adj, new_feat, labels
+    temp[indx_train] = 1
+    temp[indx_test] = -1
+    temp = temp[connected_nodes_ind]
+    indx_train = np.argwhere(temp == 1).squeeze()
+    indx_test =  np.argwhere(temp == -1).squeeze()
+    return new_adj, new_feat, labels, indx_train, indx_test
 
 def uniform_random_subsample(adjacency, genres_gt, subsampling_percentage=0.10):
     n_nodes = adjacency.shape[0]

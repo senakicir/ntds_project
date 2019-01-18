@@ -91,8 +91,10 @@ class MLP():
                     print ('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
                            %(epoch+1, self.num_epochs, i+1, len(dataset)//self.batch_size, loss.item()))
 
-        torch.save(self.net.state_dict(), self.model_path)
 
+
+    def save_model(self):
+        torch.save(self.net.state_dict(), self.model_path)
     def load_pretrained(self):
         self.net.load_state_dict(torch.load(self.model_path))
     def classify(self, idx_test):
