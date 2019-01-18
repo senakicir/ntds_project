@@ -137,8 +137,7 @@ def save_features_labels_adjacency(use_PCA = True, use_eigenmaps = False, rem_di
 
     all_features = np.vstack([features_part_test, features_part_train])
     all_labels = np.concatenate([genres_gt_test, genres_gt_train])
-    idx_test = np.array(list(range(features_part_test.shape[0])))
-    idx_tr = np.array(list(range(features_part_test.shape[0],  all_features.shape[0])))
+    idx_test = np.array(list(range(0,features_part_test.shape[0])))
     adjacency_big, all_features, all_labels, _,  = form_adjacency(all_features, all_labels, genres_classes, rem_disconnected, threshold = threshold, metric = metric)
 
     np.save("dataset_saved_numpy/"+ name + "all_labels.npy", all_labels)
@@ -167,13 +166,9 @@ def save_features_labels_adjacency(use_PCA = True, use_eigenmaps = False, rem_di
             mlp_name = form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp)
             mlp_nn = MLP_NN(hidden_size=100, features=feature_values, labels=genres_gt,num_epoch=10,batch_size=100,num_classes=len(genres_classes), save_path=mlp_name,cuda=use_cpu)
             feature_values = mlp_nn.get_rep(feature_values)
-        adjacency, feature_values, genres_gt, genres_classes, _, _  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
+        adjacency, feature_values, genres_gt, genres_classes  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
         if (use_eigenmaps):
-            if save_bool:
-                feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
-            else:
-                temp_feat = spectral_embedding(adjacency_big,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
-                feature_values = temp_feat[idx_test, :]
+            feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)  
 
         np.save("dataset_saved_numpy/"+ file_name + "labels.npy", genres_gt)
         np.save("dataset_saved_numpy/"+ file_name + "adjacency.npy", adjacency)
