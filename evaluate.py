@@ -37,6 +37,9 @@ def cross_validation(model_ori, indx, classes, K=5, name = ""):
     plot_confusion_matrix(overall_confusion_matrix, classes, name)
     return mean_error, std_error
 
+def train_gcn(model_ori, idx_train, classes, name = ""):
+    model = copy.deepcopy(model_ori)
+    model.train(idx_train)
 
 def evaluate_transductive(model_ori, idx_train, idx_test, classes, name = ""):
     model = copy.deepcopy(model_ori)
