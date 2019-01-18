@@ -171,16 +171,7 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
         return feature_values, genres_gt, genres_classes, adjacency,indx_train,indx_test, pygsp_graph, release_dates
     return name
 
-def load_transductive_data(name):
-    labels = np.load("dataset_saved_numpy/"+ name + "all_labels.npy")
-    adjacency = np.load("dataset_saved_numpy/"+ name + "all_adjacency.npy")
-    n_data = adjacency.shape[0]
-    idx_test = np.array(list(range(0,n_data//10)))
-    idx_tr = np.array(list(range(n_data//10, n_data)))
-    return labels, adjacency, idx_test, idx_tr
-
 def load_features_labels_adjacency(name, train, plot_graph=False):
-
     assert os.path.exists("dataset_saved_numpy/" + name + "features.npy")
     assert os.path.exists("dataset_saved_numpy/" + name + "adjacency.npy")
     assert os.path.exists("dataset_saved_numpy/" + name + "labels.npy")

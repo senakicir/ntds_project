@@ -15,7 +15,7 @@ import graph_stats as gstats
 from trainer import Trainer
 from evaluate import cross_validation, simple_test, evaluate_transductive
 
-from dataloader import save_features_labels_adjacency, load_features_labels_adjacency, load_transductive_data
+from dataloader import save_features_labels_adjacency, load_features_labels_adjacency
 import transductive as tr
 from scipy import sparse
 import time as time
@@ -179,7 +179,7 @@ def test_everything(args):
             error_rf = simple_test(random_forest_clf, indx_test, classes=genres, name=file_names+"rf_")
             print('* Random Forest simple test error: {:.2f}'.format(error_rf))
 
-            error_knn = simple_test(knn_clf, indx_testa, classes=genres, name=file_names+"knn_")
+            error_knn = simple_test(knn_clf, indx_test, classes=genres, name=file_names+"knn_")
             print('* KNN simple test error: {:.2f}'.format(error_knn))
 
             #error_mlp = simple_test(mlp_clf, indx_test, classes=genres, name=file_names+"mlp_")
@@ -200,35 +200,45 @@ def test_everything(args):
 
 def transductive_learning(args):
     print('#### Applying Transductive Learning ####')
-    _, _, name, _, _, _, genres, _, _, _ = load_parameters_and_data(args) #to save
-    labels, adjacency, idx_test, idx_tr = load_transductive_data(name)
+    args, file_names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_parameters_and_data(args)
 
     adjacency = sparse.csr_matrix(adjacency)
 
-    lgc = tr.LGC(graph=adjacency,y=labels,alpha=0.50,max_iter=30)
-    hmn = tr.HMN(graph=adjacency,y=labels,max_iter=30)
-    parw = tr.PARW(graph=adjacency,y=labels,lamb=10,max_iter=30)
-    #mad = tr.MAD(graph=adjacency,y=labels,mu=np.array([1.0,0.5,1.0]),beta=2.0,max_iter=30)
-    omni = tr.OMNIProp(graph=adjacency,y=labels,lamb=1.0,max_iter=30)
-    camlp = tr.CAMLP(graph=adjacency,y=labels,beta=0.1,H=None,max_iter=30)
+    lgc = tr.LGC(graph=adjacency,y=gt_labels,alpha=0.50,max_iter=30)
+    hmn = tr.HMN(graph=adjacency,y=gt_labels,max_iter=30)
+    parw = tr.PARW(graph=adjacency,y=gt_labels,lamb=10,max_iter=30)
+    #mad = tr.MAD(graph=adjacency,y=gt_labels,mu=np.array([1.0,0.5,1.0]),beta=2.0,max_iter=30)
+    omni = tr.OMNIProp(graph=adjacency,y=gt_labels,lamb=1.0,max_iter=30)
+    camlp = tr.CAMLP(graph=adjacency,y=gt_labels,beta=0.1,H=None,max_iter=30)
 
-    mean_error_lgc = evaluate_transductive(lgc, idx_tr, idx_test,  classes=genres, name=name+"lgc_")
+    start = time.time()
+    mean_error_lgc = evaluate_transductive(lgc, indx_train, indx_test,  classes=genres, name=file_names+"lgc_")
     print('* Local and Global Consistency - error mean: {:.2f}'.format(mean_error_lgc))
+    print("lgc time", time.time()-start)
 
-    mean_error_hmn = evaluate_transductive(hmn, idx_tr, idx_test,  classes=genres, name=name+"hmn_")
+    start = time.time()
+    mean_error_hmn = evaluate_transductive(hmn, indx_train, indx_test,  classes=genres, name=file_names+"hmn_")
     print('* Harmonic Function -  error mean: {:.2f}'.format(mean_error_hmn))
+    print("Harmonic time", time.time()-start)
 
-    mean_error_parw = evaluate_transductive(parw, idx_tr, idx_test,  classes=genres, name=name+"parw_")
+    start = time.time()
+    mean_error_parw = evaluate_transductive(parw, indx_train, indx_test,  classes=genres, name=file_names+"parw_")
     print('* Partially Absorbing Random Walk -  error mean: {:.2f}'.format(mean_error_parw))
+    print("Partially Absorbing Random Walk time", time.time()-start)
 
-    #mean_error_mad, = evaluate_transductive(mad, idx_tr, idx_test,  classes=genres, name=name+"mad_")
+    #start = time.time()
+    #mean_error_mad, = evaluate_transductive(mad, indx_train, indx_test,  classes=genres, name=file_names+"mad_")
     #print('* Modified Adsorption -  error mean: {:.2f}'.format(mean_error_mad))
 
-    mean_error_omni = evaluate_transductive(omni, idx_tr, idx_test,  classes=genres, name=name+"omni_")
+    start = time.time()
+    mean_error_omni = evaluate_transductive(omni, indx_train, indx_test,  classes=genres, name=file_names+"omni_")
     print('* OMNI-Prop -  error mean: {:.2f}'.format(mean_error_omni))
+    print("OMNI-Prop time", time.time()-start)
 
-    mean_error_camlp = evaluate_transductive(camlp, idx_tr, idx_test,  classes=genres, name=name+"camlp_")
+    start = time.time()
+    mean_error_camlp = evaluate_transductive(camlp, indx_train, indx_test,  classes=genres, name=file_names+"camlp_")
     print('* Confidence-Aware Modulated Label Propagation - error: {:.2f}'.format(mean_error_camlp))
+    print(" Confidence-Aware Modulated Label Propagation time", time.time()-start)
 
 if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
