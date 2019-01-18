@@ -8,12 +8,8 @@ import numpy as np
 import pdb
 from error import accuracy_prob, error_func
 from sklearn.metrics import confusion_matrix
-# Hyper Parameters
-# hidden_size = 500
-# num_epochs = 10
-# batch_size = 100
-# learning_rate = 0.0001
 
+## MLP Network
 class Net(nn.Module):
     def __init__(self, input_size, hidden_size, num_classes):
         super(Net, self).__init__()
@@ -28,7 +24,7 @@ class Net(nn.Module):
         return out, out_rep
 
 
-
+## Custom Dataset that takes as input numpy arrays
 class MyDataset(Dataset):
     def __init__(self, data, target, transform=None):
         self.data = torch.from_numpy(data.copy()).float()

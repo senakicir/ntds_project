@@ -30,7 +30,8 @@ def advanced(adjacency, dirname, active_plots=False):
 def allstats(adjaceny, dirname, active_plots=False):
     G, N, L, deg = advanced(adjaceny, dirname, active_plots)
     print("Average Clustering Coefficient: ", nx.average_clustering(G))
-    print("Diameter of Graph: ", nx.diameter(G))
+    if nx.number_connected_components(G) ==1:
+        print("Diameter of Graph: ", nx.diameter(G))
 
 
 def plot_degree_distribution(degree_sequence, N, dirname, show=False):

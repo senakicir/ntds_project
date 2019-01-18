@@ -13,6 +13,7 @@ def plot_gt_labels(graph, labels, name):
     plt.savefig("visualizations/" + name)
     plt.close()
 
+## Plots the confusion matrix and saves it inside the visualizations folder
 def plot_confusion_matrix(our_confusion_matrix, classes, name):
     _, ax = plt.subplots(figsize=(15,10))
     plt.title('Confusion Matrix')

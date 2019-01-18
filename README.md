@@ -47,6 +47,14 @@ The different arguments that can be passed to `main.py`:
 
 Note that you should apply at least one of the two types of learning (Transductive or Inductive)
 
+## Graph Statistics
+* Basic: Total number of edges, nodes, number of connected components, number of nodes in giant component, average degree, sparsity
+
+* Advanced: Total number of edges, nodes, number of connected components, number of nodes in giant component, average degree, sparsity, degree distribution in log and linear scale + Plots
+
+* All: Total number of edges, nodes, number of connected components, number of nodes in giant component, average degree, sparsity, degree distribution in log and linear scale, diameter of the graph, average clustering coefficients + Plots
+
+## Training and Testing
 To only calculate and save the features and labels with default arguments:
 ```
 python main.py --only-features --threshold 0.9  --dataset-size medium --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120
@@ -67,7 +75,7 @@ To test trained classifiers using test set:
 python main.py --threshold 0.9  --dataset-size medium --inductive-learning --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120 --additional-models --gcn --gcn_khop
 ```
 
-### Using MLP Features to get better features and adjacency
+## Using MLP Features to get better features and adjacency
 
 First, train an MLP on the training dataset:
 ```
@@ -81,12 +89,12 @@ python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-
 
 Second, get new features by passing them through trained MLP and train the classification using them
 ```
-python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --train --recalculate-features --gcn --gcn_khop
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --train --recalculate-features --additional-models --gcn --gcn_khop
 ```
 
 Test the trained methods using test set:
 ```
-python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --gcn --gcn_khop
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --additional-models --gcn --gcn_khop
 ```
 
 ## Transductive Learning Methods

@@ -164,10 +164,13 @@ def test_everything(args):
             os.makedirs(stat_dirname)
 
         if args.graph_statistics == 'all':
+            ## Prints out all statistics about graph
             gstats.allstats(adjacency, stat_dirname, active_plots=False)
         elif args.graph_statistics == 'advanced':
+            ## Prints out all advanced statistics
             gstats.advanced(adjacency, stat_dirname, active_plots=args.plot_graph)
         else:  # basic setting
+            ## Prints out basic statistics
             gstats.basic(adjacency)
         gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
 
