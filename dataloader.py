@@ -130,11 +130,11 @@ def form_adjacency(features, labels, genres, rem_disconnected, idx_tr=0, idx_tes
     assert num_of_disconnected_nodes == 0
     return adjacency, features, labels, genres
 
-def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps = False, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True,use_mlp=False,use_cpu=False):
+def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps = False, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True,use_mlp=False,use_cpu=False,prefix=""):
     tracks, features = csv_loader()
     features_part_train, features_part_test, genres_gt_train, genres_gt_test, genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size, genres =genres, num_classes=num_classes)
 
-    name = form_file_names(use_PCA, PCA_dim, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp)
+    name = form_file_names(use_PCA, PCA_dim, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp,prefix)
 
     all_features = np.vstack([features_part_test, features_part_train])
     all_labels = np.concatenate([genres_gt_test, genres_gt_train])
@@ -169,7 +169,7 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
             feature_values = mlp_nn.get_rep(feature_values)
         adjacency, feature_values, genres_gt, genres_classes  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
         if (use_eigenmaps):
-            feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)  
+            feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
 
         np.save("dataset_saved_numpy/"+ file_name + "labels.npy", genres_gt)
         np.save("dataset_saved_numpy/"+ file_name + "adjacency.npy", adjacency)
