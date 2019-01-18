@@ -108,7 +108,8 @@ class MLP():
                                                    shuffle=False)
         self.prediction = np.array([])
         for images, labels in data_loader:
-            images = images.cuda()
+            if self.cuda:
+                images = images.cuda()
             outputs, _ = self.net(images)
             _, prediction = torch.max(outputs.data, 1)
             self.prediction=np.concatenate([self.prediction,prediction.cpu().detach().numpy()])
@@ -133,7 +134,8 @@ class MLP():
                                                    shuffle=False)
         new_rep = None
         for images, labels in data_loader:
-            images = images.cuda()
+            if self.cuda:
+                images = images.cuda()
             _, rep = self.net(images)
             if new_rep is None:
                 new_rep = rep.cpu().detach().numpy()
@@ -147,79 +149,3 @@ class MLP():
         for k, v in dict_model.items():
             if "layer" in k:
                 dict_model[k].reset_parameters()
-
-# def do_mlp(x_train, y_train,x_test, y_test,num_classes):
-#     # MNIST Dataset
-#     # train_dataset = dsets.MNIST(root='../data',
-#     #                             train=True,
-#     #                             transform=transforms.ToTensor(),
-#     #                             download=True)
-#     #
-#     # test_dataset = dsets.MNIST(root='../data',
-#     #                            train=False,
-#     #                            transform=transforms.ToTensor())
-#     input_size = x_train.shape[1]
-#     y_train = y_train.astype(np.int32)
-#     y_test = y_test.astype(np.int32)
-#     train_dataset = MyDataset(x_train, y_train)
-#
-#     test_dataset = MyDataset(x_test, y_test)
-#
-#     # Data Loader (Input Pipeline)
-#     train_loader = torch.utils.data.DataLoader(dataset=train_dataset,
-#                                                batch_size=batch_size,
-#                                                shuffle=True)
-#
-#     test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
-#                                               batch_size=batch_size,
-#                                               shuffle=False)
-#
-#     # Neural Network Model (1 hidden layer)
-#
-#
-#     net = Net(input_size, hidden_size, num_classes)
-#     net.cuda()
-#
-#     # Loss and Optimizer
-#     criterion = nn.CrossEntropyLoss()
-#     optimizer = torch.optim.Adam(net.parameters(), lr=learning_rate)
-#
-#     # Train the Model
-#     for epoch in range(num_epochs):
-#         for i, (x, labels) in enumerate(train_loader):
-#             # Convert torch tensor to Variable
-#             images = x.cuda()
-#             labels = labels.cuda()
-#
-#             # Forward + Backward + Optimize
-#             optimizer.zero_grad()  # zero the gradient buffer
-#             outputs, _ = net(images)
-#             loss = criterion(outputs, labels)
-#             loss.backward()
-#             optimizer.step()
-#
-#             if (i+1) % 100 == 0:
-#                 print ('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
-#                        %(epoch+1, num_epochs, i+1, len(train_dataset)//batch_size, loss.item()))
-#
-#     test(input_size, hidden_size, x_test, y_test,num_classes)
-#
-# def test(input_size, hidden_size, x_test, y_test,num_classes)
-#     # Test the Model
-#     net = Net(input_size, hidden_size, num_classes)
-#     net.cuda()
-#     net.load_state_dict(torch.load('model.pkl'))
-#     net.eval()
-#     correct = 0
-#     total = 0
-#     for x, labels in test_loader:
-#         images = x.cuda()
-#         outputs, _ = net(images)
-#         _, predicted = torch.max(outputs.data, 1)
-#         total += labels.size(0)
-#         correct += (predicted.cpu() == labels).sum()
-#
-#     print('Accuracy of the network on the 10000 test images: %d %%' % (100 * correct / total))
-#
-#     # Save the Model
-#     torch.save(net.state_dict(), 'model.pkl')
