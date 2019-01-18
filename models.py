@@ -63,29 +63,52 @@ class GraphConvolution(Module):
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
 
+# class GraphNeuralNet(torch.nn.Module):
+#     def __init__(self, nfeat, nhid, nclass, dropout):
+#         super(GraphNeuralNet, self).__init__()
+#
+#         self.gc1 = GraphConvolution(nfeat, nhid[0])
+#         self.bn1 = BatchNorm1d(nhid[0])
+#         self.gc2 = GraphConvolution(nhid[0], nhid[1])
+#         self.bn2 = BatchNorm1d(nhid[1])
+#         self.gc3 = GraphConvolution(nhid[1], nclass)
+#         self.dropout = dropout
+#
+#         self.model = OrderedDict([
+#             ("layer_one", self.gc1),
+#             ("layer_two", self.gc2),
+#             ("layer_three", self.gc3)])
+#
+#     def forward(self, x, adj):
+#         x = F.relu(self.bn1(self.gc1(x, adj)))
+#         x = F.dropout(x, self.dropout, training=self.training)
+#         x = F.relu(self.bn2(self.gc2(x, adj)))
+#         x = F.dropout(x, self.dropout, training=self.training)
+#         x = self.gc3(x, adj)
+#         return F.log_softmax(x, dim=1)
+
+
 class GraphNeuralNet(torch.nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout):
         super(GraphNeuralNet, self).__init__()
 
         self.gc1 = GraphConvolution(nfeat, nhid[0])
         self.bn1 = BatchNorm1d(nhid[0])
-        self.gc2 = GraphConvolution(nhid[0], nhid[1])
-        self.bn2 = BatchNorm1d(nhid[1])
-        self.gc3 = GraphConvolution(nhid[1], nclass)
+        self.gc2 = GraphConvolution(nhid[0], nclass)
         self.dropout = dropout
-
         self.model = OrderedDict([
             ("layer_one", self.gc1),
             ("layer_two", self.gc2),
             ("layer_three", self.gc3)])
 
+
     def forward(self, x, adj):
-        x = F.relu(self.bn1(self.gc1(x, adj)))
+        x = F.relu((self.gc1(x, adj)))
         x = F.dropout(x, self.dropout, training=self.training)
-        x = F.relu(self.bn2(self.gc2(x, adj)))
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = self.gc3(x, adj)
+        x = self.gc2(x, adj)
+        #x = F.dropout(x, self.dropout, training=self.training)
         return F.log_softmax(x, dim=1)
+
 
 class GCN():
     def __init__(self, nhid, dropout, adjacency, features, labels, n_class, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
