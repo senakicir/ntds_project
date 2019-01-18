@@ -163,7 +163,7 @@ def test_everything(args):
             gstats.advanced(adjacency, stat_dirname, active_plots=args.plot_graph)
         else:  # basic setting
             gstats.basic(adjacency)
-        gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
+        #gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
 
     if args.inductive_learning:
         print('#### Testing Inductive Learning ####')
