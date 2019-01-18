@@ -133,7 +133,7 @@ def form_adjacency(features, labels, genres, rem_disconnected, indx_train=0, ind
         adjacency, features, labels,indx_train,indx_test= remove_disconnected_nodes(adjacency, features, labels,indx_train,indx_test)
     num_of_disconnected_nodes = np.sum(np.sum(adjacency, axis=0) == 0)
     assert num_of_disconnected_nodes == 0
-    return adjacency, features, labels, genres
+    return adjacency, features, labels, genres,indx_train,indx_test
 
 def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps = False, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True,use_mlp=False,use_cpu=False,prefix=""):
     tracks, features = csv_loader()
@@ -149,7 +149,7 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
         mlp_name = form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp)
         mlp_nn = MLP_NN(hidden_size=100, features=feature_values, labels=genres_gt,num_epoch=10,batch_size=100,num_classes=len(genres_classes), save_path=mlp_name,cuda=use_cpu)
         feature_values = mlp_nn.get_rep(feature_values)
-    adjacency, _, genres_gt, _,  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected, indx_train=indx_train, indx_test=indx_test, threshold = threshold, metric = metric)
+    adjacency, features, genres_gt, _,indx_train,indx_test  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected, indx_train=indx_train, indx_test=indx_test, threshold = threshold, metric = metric)
     if (use_eigenmaps):
         feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
 
