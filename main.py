@@ -13,7 +13,7 @@ from error import error_func
 from graph_analysis import Our_Graph
 import graph_stats as gstats
 from trainer import Trainer
-from evaluate import cross_validation, simple_test, evaluate_transductive
+from evaluate import cross_validation, simple_test, evaluate_transductive, train_gcn
 
 from dataloader import save_features_labels_adjacency, load_features_labels_adjacency
 import transductive as tr
@@ -134,7 +134,7 @@ def train_everything(args):
             print("Training GCN")
             start = time.time()
             gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
-            train_gcn(gnn_clf, indx_train, name=file_names+"gnn_")
+            train_gcn(gnn_clf, indx_train,classes=len(genres), name=file_names+"gnn_")
             print("GCN time", time.time()-start)
 
         if args.gcn_khop:
