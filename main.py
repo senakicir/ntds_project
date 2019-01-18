@@ -8,7 +8,7 @@ import argparse
 
 from utils import *
 from visualization import *
-from models import SVM, Random_Forest, KNN, GCN, MLP
+from models import SVM, Random_Forest, KNN, GCN, MLP, GCN_KHop
 from error import error_func
 from graph_analysis import Our_Graph
 import graph_stats as gstats
@@ -58,6 +58,8 @@ parser.add_argument('--use-cpu', action='store_false',
                     help="Use CPU when training the GCN (Default:False)")
 parser.add_argument('--gcn', action='store_true',
                     help="Evaluate GCN (Default:False)")
+parser.add_argument('--gcn_khop', action='store_true',
+                    help="Evaluate GCN KHOP (Default:False)")
 parser.add_argument('--mlp-nn', action='store_true',
                     help="Evaluate MLPNN (Default:False)")
 parser.add_argument('--use-mlp-features', action='store_true',
@@ -131,9 +133,18 @@ def train_everything(args):
             #print("MLP time", time.time()-start)
         if args.gcn:
             print("Training GCN")
-            gnn_clf = GCN(nhid=[1000, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 200, batch_size=10000, save_path=file_names)
+            gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
             mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
+        if args.gcn_khop:
+            print("Training GCN")
+            gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency=adjacency, features=features, labels=gt_labels,
+                               n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01,
+                               weight_decay=5e-4, epochs=300, batch_size=10000, save_path=file_names)
+            mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5, classes=genres,
+                                                             name=file_names + "gnn_khop_")
+            print('* GCN KHop cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
+
         if args.mlp_nn:
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=100,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, n_data, K=5,classes=genres, name=file_names+"mlpNN_")
@@ -176,9 +187,13 @@ def test_everything(args):
             #print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
-            gnn_clf = GCN(nhid=[1000, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 200, batch_size=10000, save_path=file_names)
+            gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
             error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
+        if args.gcn_khop:
+            gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
+            error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_khop_")
+            print('* GCN KHop simple test error: {:.2f}'.format(error_gnn))
         if args.mlp_nn:
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             error_mlpNN = simple_test(mlp_nn, n_data, classes=genres, name=file_names+"mlpNN_")
