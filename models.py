@@ -6,13 +6,14 @@ import torch
 from torch.nn.parameter import Parameter
 from torch.nn.modules.module import Module
 import torch.nn.functional as F
-from torch.nn import BatchNorm1d, ReLU, Dropout
+from torch.nn import BatchNorm1d, ReLU, Dropout, Linear
 import sklearn.svm as svm
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.cluster import KMeans
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from trainer import Trainer
+from trainer_khop import TrainerKHop
 from error import accuracy_prob, error_func
 from collections import OrderedDict
 from sklearn.metrics import confusion_matrix
@@ -63,29 +64,77 @@ class GraphConvolution(Module):
                + str(self.in_features) + ' -> ' \
                + str(self.out_features) + ')'
 
+# class GraphNeuralNet(torch.nn.Module):
+#     def __init__(self, nfeat, nhid, nclass, dropout):
+#         super(GraphNeuralNet, self).__init__()
+#
+#         self.gc1 = GraphConvolution(nfeat, nhid[0])
+#         self.bn1 = BatchNorm1d(nhid[0])
+#         self.gc2 = GraphConvolution(nhid[0], nhid[1])
+#         self.bn2 = BatchNorm1d(nhid[1])
+#         self.gc3 = GraphConvolution(nhid[1], nclass)
+#         self.dropout = dropout
+#
+#         self.model = OrderedDict([
+#             ("layer_one", self.gc1),
+#             ("layer_two", self.gc2),
+#             ("layer_three", self.gc3)])
+#
+#     def forward(self, x, adj):
+#         x = F.relu(self.bn1(self.gc1(x, adj)))
+#         x = F.dropout(x, self.dropout, training=self.training)
+#         x = F.relu(self.bn2(self.gc2(x, adj)))
+#         x = F.dropout(x, self.dropout, training=self.training)
+#         x = self.gc3(x, adj)
+#         return F.log_softmax(x, dim=1)
+
+
 class GraphNeuralNet(torch.nn.Module):
     def __init__(self, nfeat, nhid, nclass, dropout):
         super(GraphNeuralNet, self).__init__()
 
         self.gc1 = GraphConvolution(nfeat, nhid[0])
         self.bn1 = BatchNorm1d(nhid[0])
-        self.gc2 = GraphConvolution(nhid[0], nhid[1])
-        self.bn2 = BatchNorm1d(nhid[1])
-        self.gc3 = GraphConvolution(nhid[1], nclass)
+        self.gc2 = GraphConvolution(nhid[0], nclass)
         self.dropout = dropout
+        self.model = OrderedDict([
+            ("layer_one", self.gc1),
+            ("layer_two", self.gc2)])
 
+    def forward(self, x, adj):
+        x = F.relu((self.gc1(x, adj)))
+        #x = F.dropout(x, self.dropout, training=self.training)
+        x = self.gc2(x, adj)
+        #x = F.dropout(x, self.dropout, training=self.training)
+        return F.log_softmax(x, dim=1)
+
+
+class GraphNeuralNetKHop(torch.nn.Module):
+    def __init__(self, nfeat, nhid, nclass, dropout):
+        super(GraphNeuralNetKHop, self).__init__()
+
+        self.gc1 = GraphConvolution(nfeat, nhid[0])
+        self.bn1 = BatchNorm1d(nhid[0])
+        self.gc2 = GraphConvolution(nhid[0], nclass)
+        self.lin1 = Linear(nclass*2, nclass)
+        self.dropout = dropout
         self.model = OrderedDict([
             ("layer_one", self.gc1),
             ("layer_two", self.gc2),
-            ("layer_three", self.gc3)])
+            ("layer_linear", self.lin1)])
 
-    def forward(self, x, adj):
-        x = F.relu(self.bn1(self.gc1(x, adj)))
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = F.relu(self.bn2(self.gc2(x, adj)))
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = self.gc3(x, adj)
-        return F.log_softmax(x, dim=1)
+    def forward(self, x, adj, adj2):
+        #Adjacency power 1
+        x1 = F.relu((self.gc1(x, adj)))
+        x1 = self.gc2(x1, adj)
+        #Adjacency power 2
+        x2 = F.relu((self.gc1(x, adj2)))
+        x2 = self.gc2(x2, adj2)
+
+        x = self.lin1(torch.cat((x1, x2), dim=1))
+        x = F.log_softmax(x, dim=1)
+        return x
+
 
 class GCN():
     def __init__(self, nhid, dropout, adjacency, features, labels, n_class, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
@@ -137,6 +186,73 @@ class GCN():
         return c_m, acc_test
 
     def reset(self):
+        dict_model = self.gcn.model
+        for k, v in dict_model.items():
+            if "layer" in k:
+                dict_model[k].reset_parameters()
+
+class GCN_KHop():
+    def __init__(self, nhid, dropout, adjacency, features, labels, n_class, khop=1, cuda=True, regularization=None, lr=0.01, weight_decay=5e-4, epochs=100, batch_size=100, save_path=""):
+        self.adjacency_unnorm = adjacency
+        self.features = features
+        self.nfeat = features.shape[-1]
+        self.nhid = nhid
+        self.nclass = n_class
+        self.epochs = epochs
+        self.gcn = GraphNeuralNetKHop(self.nfeat, self.nhid, self.nclass, dropout)
+
+        self.features = torch.FloatTensor(np.array(self.features))
+        self.adjacency_unnorm2 = self.adjacency_unnorm.copy()
+        #Khop = 1
+        self.adjacency_unnorm = (self.adjacency_unnorm + np.eye(self.adjacency_unnorm.shape[0]))
+        self.D = np.diag(self.adjacency_unnorm.sum(axis=1))
+        self.D_norm = (np.power(np.linalg.inv(self.D), 0.5))
+        self.D_norm_sparse = sp.coo_matrix(self.D_norm)
+        self.adjacency_norm = self.D_norm_sparse @ sp.coo_matrix(self.adjacency_unnorm) @ self.D_norm_sparse
+        self.adjacency = sparse_mx_to_torch_sparse_tensor(self.adjacency_norm)
+
+        #Khop = 2
+        self.adjacency_unnorm2 = np.linalg.matrix_power(self.adjacency_unnorm2, khop)
+        self.adjacency_unnorm2 = (self.adjacency_unnorm2 + np.eye(self.adjacency_unnorm2.shape[0]))
+        self.D2 = np.diag(self.adjacency_unnorm2.sum(axis=1))
+        self.D_norm2 = (np.power(np.linalg.inv(self.D2), 0.5))
+        self.D_norm_sparse2 = sp.coo_matrix(self.D_norm2)
+        self.adjacency_norm2 = self.D_norm_sparse2 @ sp.coo_matrix(self.adjacency_unnorm2) @ self.D_norm_sparse2
+        self.adjacency2 = sparse_mx_to_torch_sparse_tensor(self.adjacency_norm2)
+
+        self.labels = torch.LongTensor(labels.astype(np.int64))
+
+        self.model_path = 'models/best_model_' + save_path + 'batch_size_' + str(batch_size) +'_gcnkhop.sav'
+        #Create trainer
+        self.trainer = TrainerKHop(self.gcn, self.adjacency, self.adjacency2, self.features, self.labels, cuda, regularization, lr, weight_decay, batch_size, self.model_path)
+
+    def train(self, idx_train):
+        train_size = idx_train.shape[0]
+        valid_size = train_size // 5
+        idx_val = np.random.permutation(np.arange(train_size))[0:valid_size]
+        self.idx_train = torch.LongTensor(idx_train)
+        self.idx_val = torch.LongTensor(idx_val)
+        for epoch in range(self.epochs):
+            self.trainer.train(epoch, self.idx_train, self.idx_val)
+
+    def load_pretrained(self):
+        #Load a pretrained model to test
+        self.gcn.load_state_dict(torch.load(self.model_path))
+
+    def classify(self, idx_test):
+        self.labels_test = self.labels[idx_test]
+        self.prediction = self.trainer.test(idx_test)
+
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, np.argmax(self.prediction.cpu().detach().numpy(),axis=1))
+        acc_test = error_func(np.argmax(self.prediction.cpu().detach().numpy(),axis=1), self.labels_test.numpy())
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test.numpy() == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, acc_test
+
+    def reset(self):
+        print("Reset GCN KHop")
         dict_model = self.gcn.model
         for k, v in dict_model.items():
             if "layer" in k:
