@@ -9,8 +9,8 @@ import os
 SEED = 0
 np.random.seed(SEED)
 
-def generate_PCA_features(features):
-    pca = PCA(n_components=10, svd_solver='arpack')
+def generate_PCA_features(features, PCA_dim):
+    pca = PCA(n_components=PCA_dim, svd_solver='arpack')
     return pca.fit_transform(features)
 
 def normalize_feat(features):
@@ -34,14 +34,17 @@ def uniform_random_subsample(adjacency, genres_gt, subsampling_percentage=0.10):
     genres_gt = genres_gt[shuffled_ind_subsampled]
     return adjacency, genres_gt
 
-def form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp):
+def form_file_names(use_PCA, PCA_dim, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp, prefix):
     if not os.path.exists("models"): os.makedirs("models")
     if not os.path.exists("visualizations"): os.makedirs("visualizations")
     if not os.path.exists("dataset_saved_numpy"): os.makedirs("dataset_saved_numpy")
-
-    name = ""
+    if prefix =="":
+        name = prefix
+    else:
+         name = prefix + "_"
     if use_PCA:
-        name += "PCA_"
+        name += "PCA_+dim_"+str(PCA_dim)+"_"
+
     if rem_disconnected:
         name += "rem_disconnected_"
 
