@@ -108,7 +108,8 @@ class MLP():
                                                    shuffle=False)
         self.prediction = np.array([])
         for images, labels in data_loader:
-            images = images.cuda()
+            if self.cuda:
+                images = images.cuda()
             outputs, _ = self.net(images)
             _, prediction = torch.max(outputs.data, 1)
             self.prediction=np.concatenate([self.prediction,prediction.cpu().detach().numpy()])
@@ -133,7 +134,8 @@ class MLP():
                                                    shuffle=False)
         new_rep = None
         for images, labels in data_loader:
-            images = images.cuda()
+            if self.cuda:
+                images = images.cuda()
             _, rep = self.net(images)
             if new_rep is None:
                 new_rep = rep.cpu().detach().numpy()

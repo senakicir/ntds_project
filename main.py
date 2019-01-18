@@ -143,10 +143,11 @@ def train_everything(args):
             print("GCN K-Hop time", time.time()-start)
 
         if args.mlp_nn:
+            start = time.time()
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=100,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, indx_train, K=5,classes=genres, name=file_names+"mlpNN_")
             print('* MLP NN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlpNN, std_error_mlpNN))
-
+            print("MLP time", time.time()-start)
 
 def test_everything(args):
     args, file_names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_parameters_and_data(args)

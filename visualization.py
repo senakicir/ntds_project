@@ -14,18 +14,19 @@ def plot_gt_labels(graph, labels, name):
     plt.close()
 
 def plot_confusion_matrix(our_confusion_matrix, classes, name):
-    _, ax = plt.subplots()
+    _, ax = plt.subplots(figsize=(15,10))
     plt.title('Confusion Matrix')
-    plt.imshow(our_confusion_matrix)
+    plt.imshow(our_confusion_matrix, cmap=plt.cm.Blues)
     plt.colorbar()
     tick_marks = np.arange(len(classes))
 
     # Loop over data dimensions and create text annotations.
+    thresh = our_confusion_matrix.max() / 2
     for i in range(len(classes)):
         for j in range(len(classes)):
-            ax.text(j, i, '{:.2f}'.format(our_confusion_matrix[i, j]), ha="center", va="center", color="b")
+            ax.text(j, i, '{:.2f}'.format(our_confusion_matrix[i, j]), ha="center", va="center", color="white" if our_confusion_matrix[i, j] > thresh else "black")
 
-    plt.xticks(tick_marks, classes)
+    plt.xticks(tick_marks, classes, rotation=45)
     plt.yticks(tick_marks, classes)
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
