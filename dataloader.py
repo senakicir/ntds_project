@@ -102,7 +102,6 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
         dict_genres[genres[ind]] = int(ind)
     bool_train = np.logical_or(subset['set', 'split'] == "training", subset['set', 'split'] == "validation")
     bool_test = subset['set', 'split'] == "test"
-    pdb.set_trace()
     indx_train = np.argwhere(bool_train == True).squeeze()
     indx_test = np.argwhere(bool_test == True).squeeze()
     #subset_train = subset[bool_train]
@@ -143,7 +142,6 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
 
     if (use_PCA):
         feature_values = normalize_feat(feature_values)
-        pdb.set_trace()
         feature_values = generate_PCA_features(feature_values, PCA_dim)
     if use_mlp:
         mlp_name = form_file_names(use_PCA,PCA_dim, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp,prefix)
