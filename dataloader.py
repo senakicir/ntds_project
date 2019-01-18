@@ -88,7 +88,7 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
 
     subset = subset_tracks.loc[subset_tracks['track', 'genre_top'].isin(genres)]
     # Takes a subset of features based on the tracks found in the variable subset
-    subset_features = features[features.index.isin(subset.index)]
+    subset_features = features[features.index.isin(subset.index)].loc[:,use_features].values
     #features_part_mfcc = small_features.loc[:,('mfcc', ('median', 'mean'), slice('01','12'))]
     #features_part_chroma = small_features.loc[:,('chroma_cens', ('median', 'mean'), slice('01','05'))] # Take chroma column as features
     #features_part = features_part_mfcc.join(features_part_chroma)
@@ -100,84 +100,68 @@ def select_features(tracks, features, use_features = ['mfcc'], dataset_size = No
     dict_genres = {}
     for ind in range(0, len(genres)):
         dict_genres[genres[ind]] = int(ind)
-    subset_train = subset[np.logical_or(subset['set', 'split'] == "training", subset['set', 'split'] == "validation")]
-    subset_test = subset[subset['set', 'split'] == "test"]
+    bool_train = np.logical_or(subset['set', 'split'] == "training", subset['set', 'split'] == "validation")
+    bool_test = subset['set', 'split'] == "test"
+    pdb.set_trace()
+    indx_train = np.argwhere(bool_train == True).squeeze()
+    indx_test = np.argwhere(bool_test == True).squeeze()
+    #subset_train = subset[bool_train]
+    #subset_test = subset[bool_test]
 
-    features_part_train = subset_features[subset_features.index.isin(subset_train.index)].loc[:,use_features].values
-    features_part_test = subset_features[subset_features.index.isin(subset_test.index)].loc[:,use_features].values
+    #features_part_train = subset_features[subset_features.index.isin(subset_train.index)].loc[:,use_features].values
+    #features_part_test = subset_features[subset_features.index.isin(subset_test.index)].loc[:,use_features].values
 
-    genres_gt_train = np.zeros([features_part_train.shape[0]],dtype=np.int8)-1
-    genres_gt_test = np.zeros([features_part_test.shape[0]],dtype=np.int8)-1
-
+    #genres_gt_train = np.zeros([features_part_train.shape[0]],dtype=np.int8)-1
+    #genres_gt_test = np.zeros([features_part_test.shape[0]],dtype=np.int8)-1
+    genres_gt = np.zeros([subset_features.shape[0]],dtype=np.int8)-1
     for ind in range(0, len(genres)):
-        temp = (subset_train['track', 'genre_top'] == genres[ind]).to_frame().values.squeeze()
-        genres_gt_train[temp] = dict_genres[genres[ind]]
-        temp = (subset_test['track', 'genre_top'] == genres[ind]).to_frame().values.squeeze()
-        genres_gt_test[temp] = dict_genres[genres[ind]]
+        #temp = (subset_train['track', 'genre_top'] == genres[ind]).to_frame().values.squeeze()
+        #genres_gt_train[temp] = dict_genres[genres[ind]]
+        temp = (subset['track', 'genre_top'] == genres[ind]).to_frame().values.squeeze()
+        genres_gt[temp] = dict_genres[genres[ind]]
 
-    return features_part_train, features_part_test, genres_gt_train, genres_gt_test, genres, dict_genres, release_dates
+    return subset_features, genres_gt, genres, dict_genres,indx_train,indx_test, release_dates
 
 
-def form_adjacency(features, labels, genres, rem_disconnected, idx_tr=0, idx_test=0, threshold = 0.66, metric ='correlation'):
+def form_adjacency(features, labels, genres, rem_disconnected, indx_train=0, indx_test=0, threshold = 0.66, metric ='correlation'):
     distances = pdist(features, metric=metric) # Use cosine equation to calculate distance
     kernel_width = distances.mean()
     weights = np.exp(-distances**2 / kernel_width**2) # Use Gaussian function to calculate weights
     weights[weights < threshold] = 0
     adjacency = squareform(weights)
     if rem_disconnected:
-        adjacency, features, labels= remove_disconnected_nodes(adjacency, features, labels)
+        adjacency, features, labels,indx_train,indx_test= remove_disconnected_nodes(adjacency, features, labels,indx_train,indx_test)
     num_of_disconnected_nodes = np.sum(np.sum(adjacency, axis=0) == 0)
     assert num_of_disconnected_nodes == 0
     return adjacency, features, labels, genres
 
 def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps = False, rem_disconnected = True, threshold = 0.66, metric = "correlation",use_features = ['mfcc'], dataset_size = 'small',genres=None,num_classes=None, return_features=False,plot_graph=False, train=True,use_mlp=False,use_cpu=False,prefix=""):
     tracks, features = csv_loader()
-    features_part_train, features_part_test, genres_gt_train, genres_gt_test, genres_classes, dict_genres, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size, genres =genres, num_classes=num_classes)
+    feature_values, genres_gt, genres_classes, dict_genres,indx_train,indx_test, release_dates = select_features(tracks, features, use_features = use_features, dataset_size = dataset_size, genres =genres, num_classes=num_classes)
 
     name = form_file_names(use_PCA, PCA_dim, use_eigenmaps, rem_disconnected, dataset_size, threshold,use_mlp,prefix)
 
-    all_features = np.vstack([features_part_test, features_part_train])
-    all_labels = np.concatenate([genres_gt_test, genres_gt_train])
-    idx_test = np.array(list(range(0,features_part_test.shape[0])))
-    adjacency_big, _, all_labels, _,  = form_adjacency(all_features, all_labels, genres_classes, rem_disconnected, threshold = threshold, metric = metric)
+    if (use_PCA):
+        feature_values = normalize_feat(feature_values)
+        pdb.set_trace()
+        feature_values = generate_PCA_features(feature_values, PCA_dim)
+    if use_mlp:
+        mlp_name = form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp)
+        mlp_nn = MLP_NN(hidden_size=100, features=feature_values, labels=genres_gt,num_epoch=10,batch_size=100,num_classes=len(genres_classes), save_path=mlp_name,cuda=use_cpu)
+        feature_values = mlp_nn.get_rep(feature_values)
+    adjacency, _, genres_gt, _,  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected, indx_train=indx_train, indx_test=indx_test, threshold = threshold, metric = metric)
+    if (use_eigenmaps):
+        feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
 
-    np.save("dataset_saved_numpy/"+ name + "all_labels.npy", all_labels)
-    np.save("dataset_saved_numpy/"+ name + "all_adjacency.npy", adjacency_big)
-
-    for save_bool in [not train, train]:
-        if save_bool:
-            feature_values = features_part_train
-            genres_gt = genres_gt_train
-            file_name = name + "train_"
-        else:
-            feature_values = features_part_test
-            genres_gt = genres_gt_test
-            file_name = name + "test_"
-
-        if (use_PCA):
-            if save_bool:
-                feature_values = normalize_feat(feature_values)
-                feature_values = generate_PCA_features(feature_values, PCA_dim)
-            else:
-                temp_feat = normalize_feat(all_features)
-                temp_feat = generate_PCA_features(temp_feat, PCA_dim)
-                feature_values = temp_feat[idx_test, :]
-
-        if use_mlp:
-            mlp_name = form_file_names(use_PCA, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp)
-            mlp_nn = MLP_NN(hidden_size=100, features=feature_values, labels=genres_gt,num_epoch=10,batch_size=100,num_classes=len(genres_classes), save_path=mlp_name,cuda=use_cpu)
-            feature_values = mlp_nn.get_rep(feature_values)
-        adjacency, feature_values, genres_gt, genres_classes  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected,  threshold = threshold, metric = metric)
-        if (use_eigenmaps):
-            feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
-
-        np.save("dataset_saved_numpy/"+ file_name + "labels.npy", genres_gt)
-        np.save("dataset_saved_numpy/"+ file_name + "adjacency.npy", adjacency)
-        np.save("dataset_saved_numpy/"+ file_name + "features.npy", feature_values)
-        np.save("dataset_saved_numpy/" + file_name + "genres_classes.npy", genres_classes)
-        np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
-        np.save("dataset_saved_numpy/" + file_name + "release_dates.npy", release_dates)
-        print("Dataset of size {}. Features,labels,and genres saved using prefix: {}".format(adjacency.shape[0], file_name[:len(file_name)-1]))
+    np.save("dataset_saved_numpy/"+ name + "labels.npy", genres_gt)
+    np.save("dataset_saved_numpy/"+ name + "adjacency.npy", adjacency)
+    np.save("dataset_saved_numpy/"+ name + "features.npy", feature_values)
+    np.save("dataset_saved_numpy/" + name + "genres_classes.npy", genres_classes)
+    np.save("dataset_saved_numpy/" + name + "indx_train.npy", indx_train)
+    np.save("dataset_saved_numpy/" + name + "indx_test.npy", indx_test)
+    np.save("dataset_saved_numpy/dict_genres.npy", dict_genres)
+    np.save("dataset_saved_numpy/" + name + "release_dates.npy", release_dates)
+    print("Dataset of size {}. Features,labels,and genres saved using prefix: {}".format(adjacency.shape[0], name[:len(name)-1]))
 
     if (return_features):
         pygsp_graph = None
@@ -186,7 +170,7 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
             pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
             pygsp_graph.set_coordinates('spring') #for visualization
             plot_gt_labels(pygsp_graph, genres_gt, name)
-        return feature_values, genres_gt, genres_classes, adjacency, pygsp_graph, release_dates
+        return feature_values, genres_gt, genres_classes, adjacency,indx_train,indx_test, pygsp_graph, release_dates
     return name
 
 def load_transductive_data(name):
@@ -198,24 +182,22 @@ def load_transductive_data(name):
     return labels, adjacency, idx_test, idx_tr
 
 def load_features_labels_adjacency(name, train, plot_graph=False):
-    if train:
-        file_name = name + "train_"
-    else:
-        file_name = name + "test_"
 
-    assert os.path.exists("dataset_saved_numpy/" + file_name + "features.npy")
-    assert os.path.exists("dataset_saved_numpy/" + file_name + "adjacency.npy")
-    assert os.path.exists("dataset_saved_numpy/" + file_name + "labels.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "features.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "adjacency.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "labels.npy")
     assert os.path.exists("dataset_saved_numpy/dict_genres.npy")
-    assert os.path.exists("dataset_saved_numpy/" + file_name + "genres_classes.npy")
-    assert os.path.exists("dataset_saved_numpy/" + file_name + "release_dates.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "genres_classes.npy")
+    assert os.path.exists("dataset_saved_numpy/" + name + "release_dates.npy")
 
-    features = np.load("dataset_saved_numpy/" + file_name + "features.npy")
-    adjacency =  np.load("dataset_saved_numpy/" + file_name + "adjacency.npy")
-    labels = np.load("dataset_saved_numpy/" + file_name  + "labels.npy")
+    features = np.load("dataset_saved_numpy/" + name + "features.npy")
+    adjacency =  np.load("dataset_saved_numpy/" + name + "adjacency.npy")
+    labels = np.load("dataset_saved_numpy/" + name  + "labels.npy")
     dict_genres = np.load("dataset_saved_numpy/dict_genres.npy")
-    genres_classes = np.load("dataset_saved_numpy/" + file_name + "genres_classes.npy")
-    release_dates = np.load("dataset_saved_numpy/" + file_name + "release_dates.npy")
+    genres_classes = np.load("dataset_saved_numpy/" + name + "genres_classes.npy")
+    release_dates = np.load("dataset_saved_numpy/" + name + "release_dates.npy")
+    indx_train = np.load("dataset_saved_numpy/" + name + "indx_train.npy")
+    indx_test = np.load("dataset_saved_numpy/" + name + "indx_test.npy")
 
     pygsp_graph = None
     if plot_graph:
@@ -223,4 +205,4 @@ def load_features_labels_adjacency(name, train, plot_graph=False):
         pygsp_graph = pg.graphs.Graph(subsampled_adjacency, lap_type = 'normalized')
         pygsp_graph.set_coordinates('spring') #for visualization
         plot_gt_labels(pygsp_graph, genres_gt, name)
-    return features, labels, genres_classes, adjacency,  pygsp_graph, release_dates
+    return features, labels, genres_classes, adjacency,indx_train,indx_test,  pygsp_graph, release_dates

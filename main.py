@@ -89,18 +89,17 @@ def load_parameters_and_data(args):
         if args.only_features:
             return
 
-        features, gt_labels, genres, adjacency, pygsp_graph, release_dates = output
+        features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = output
     else:
         print("Loading features, labels, and adjacency ...")
-        features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_features_labels_adjacency(names, args.train, plot_graph=args.plot_graph)
+        features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_features_labels_adjacency(names, args.train, plot_graph=args.plot_graph)
 
-    n_data = features.shape[0]
-    print("The dataset size is: {}. Genres that will be used: {}".format(n_data, genres))
+    print("The dataset size is: {}. Genres that will be used: {}".format(features.shape[0], genres))
 
-    return args, n_data, names, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates
+    return args, names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates
 
 def train_everything(args):
-    args, n_data, file_names, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+    args, file_names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_parameters_and_data(args)
     if args.inductive_learning:
         print('#### Applying Inductive Learning ####')
 
@@ -113,46 +112,46 @@ def train_everything(args):
             #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
             start = time.time()
-            mean_error_svm, std_error_svm = cross_validation(svm_clf, n_data, K=5, classes=genres, name=file_names+"svm_")
+            mean_error_svm, std_error_svm = cross_validation(svm_clf, indx_train, K=5, classes=genres, name=file_names+"svm_")
             print('* SVM cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_svm, std_error_svm))
             print("SVM time", time.time()-start)
 
             start = time.time()
-            mean_error_rf, std_error_rf = cross_validation(random_forest_clf, n_data, K=5,classes=genres, name=file_names+"rf_")
+            mean_error_rf, std_error_rf = cross_validation(random_forest_clf, indx_train, K=5,classes=genres, name=file_names+"rf_")
             print('* Random Forest cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_rf, std_error_rf))
             print("RF time", time.time()-start)
 
             start = time.time()
-            mean_error_knn, std_error_knn = cross_validation(knn_clf, n_data, K=5,classes=genres, name=file_names+"knn_")
+            mean_error_knn, std_error_knn = cross_validation(knn_clf, indx_train, K=5,classes=genres, name=file_names+"knn_")
             print('* KNN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_knn, std_error_knn))
             print("KNN time", time.time()-start)
 
             #start = time.time()
-            #mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, n_data, K=5, classes=genres, name=file_names+"mlp_")
+            #mean_error_mlp, std_error_mlp = cross_validation(mlp_clf, indx_train, K=5, classes=genres, name=file_names+"mlp_")
             ##print('* MLP cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlp, std_error_mlp))
             #print("MLP time", time.time()-start)
         if args.gcn:
             print("Training GCN")
             gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
-            mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5,classes=genres, name=file_names+"gnn_")
+            mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, indx_train, K=5,classes=genres, name=file_names+"gnn_")
             print('* GCN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
         if args.gcn_khop:
             print("Training GCN")
             gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency=adjacency, features=features, labels=gt_labels,
                                n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01,
                                weight_decay=5e-4, epochs=300, batch_size=10000, save_path=file_names)
-            mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, n_data, K=5, classes=genres,
+            mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, indx_train, K=5, classes=genres,
                                                              name=file_names + "gnn_khop_")
             print('* GCN KHop cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
 
         if args.mlp_nn:
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=100,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
-            mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, n_data, K=5,classes=genres, name=file_names+"mlpNN_")
+            mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, indx_train, K=5,classes=genres, name=file_names+"mlpNN_")
             print('* MLP NN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlpNN, std_error_mlpNN))
 
 
 def test_everything(args):
-    args, n_data, file_names, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
+    args, file_names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_parameters_and_data(args)
 
     if args.graph_statistics:
         if not os.path.exists(stat_dirname):
@@ -174,29 +173,29 @@ def test_everything(args):
             knn_clf = KNN(features, gt_labels, save_path=file_names)
             #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
-            #error_svm = simple_test(svm_clf, n_data, classes=genres, name=file_names+"svm_")
+            #error_svm = simple_test(svm_clf, indx_test, classes=genres, name=file_names+"svm_")
             #print('* SVM simple test error: {:.2f}'.format(error_svm))
 
-            error_rf = simple_test(random_forest_clf, n_data, classes=genres, name=file_names+"rf_")
+            error_rf = simple_test(random_forest_clf, indx_test, classes=genres, name=file_names+"rf_")
             print('* Random Forest simple test error: {:.2f}'.format(error_rf))
 
-            error_knn = simple_test(knn_clf, n_data, classes=genres, name=file_names+"knn_")
+            error_knn = simple_test(knn_clf, indx_testa, classes=genres, name=file_names+"knn_")
             print('* KNN simple test error: {:.2f}'.format(error_knn))
 
-            #error_mlp = simple_test(mlp_clf, n_data, classes=genres, name=file_names+"mlp_")
+            #error_mlp = simple_test(mlp_clf, indx_test, classes=genres, name=file_names+"mlp_")
             #print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
             gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
-            error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
+            error_gnn = simple_test(gnn_clf, indx_test, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
         if args.gcn_khop:
             gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
-            error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_khop_")
+            error_gnn = simple_test(gnn_clf, indx_test, classes=genres, name=file_names+"gnn_khop_")
             print('* GCN KHop simple test error: {:.2f}'.format(error_gnn))
         if args.mlp_nn:
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
-            error_mlpNN = simple_test(mlp_nn, n_data, classes=genres, name=file_names+"mlpNN_")
+            error_mlpNN = simple_test(mlp_nn, indx_test, classes=genres, name=file_names+"mlpNN_")
             print('* MLP NN simple test error: {:.2f}'.format(error_mlpNN))
 
 def transductive_learning(args):
@@ -231,17 +230,12 @@ def transductive_learning(args):
     mean_error_camlp = evaluate_transductive(camlp, idx_tr, idx_test,  classes=genres, name=name+"camlp_")
     print('* Confidence-Aware Modulated Label Propagation - error: {:.2f}'.format(mean_error_camlp))
 
-def call_mlp(args):
-    args, n_data, file_names, eigenmaps_name, stat_dirname, features, gt_labels, genres, adjacency, pygsp_graph, release_dates = load_parameters_and_data(args)
-    #do_mlp(x_train=features[:int(0.8*len(features))], y_train=gt_labels[:int(0.8*len(gt_labels))],x_test=features[int(0.8*len(features)):len(features)], y_test=gt_labels[int(0.8*len(gt_labels)):len(gt_labels)],num_classes=len(genres))
-
 if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
 
     if args.transductive_learning:
         transductive_learning(args)
     else:
-        #call_mlp(args)
         if args.train:
             train_everything(args)
         else:
