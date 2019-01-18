@@ -1,8 +1,4 @@
-## Genre Classification
-A little info about your project and/ or overview that explains **what** the project is about.
-
-## Motivation
-A short description of the motivation behind the creation and maintenance of the project. This should explain **why** the project exists.
+## Genre Classification: A Transductive, Inductive and Deep Approach
 
 ## Main Dependencies
 - Python3.7
