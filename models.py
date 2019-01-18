@@ -173,6 +173,9 @@ class GCN():
         #Load a pretrained model to test
         self.gcn.load_state_dict(torch.load(self.model_path))
 
+    def save_model(self):
+        pass
+
     def classify(self, idx_test):
         self.labels_test = self.labels[idx_test]
         self.prediction = self.trainer.test(idx_test)
@@ -239,6 +242,9 @@ class GCN_KHop():
         #Load a pretrained model to test
         self.gcn.load_state_dict(torch.load(self.model_path))
 
+    def save_model(self):
+        pass
+
     def classify(self, idx_test):
         self.labels_test = self.labels[idx_test]
         self.prediction = self.trainer.test(idx_test)
@@ -280,12 +286,14 @@ class SVM():
     def load_pretrained(self):
         #Load a pretrained model to test
         self.clf = joblib.load(self.model_path)
+    
+    def save_model(self):
+        joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
         self.features_test = self.features[idx_test]
         self.labels_test = self.labels[idx_test]
         self.prediction = self.clf.predict(self.features_test)
-        joblib.dump(self.clf, self.model_path)
 
     def accuracy(self, classes):
         c_m = confusion_matrix(self.labels_test, self.prediction)
@@ -315,6 +323,8 @@ class KNN():
         features_tr = self.features[idx_train]
         labels_tr = self.labels[idx_train]
         self.clf.fit(features_tr, labels_tr)
+
+    def save_model(self):
         joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
@@ -349,6 +359,8 @@ class K_Means():
     def train(self, idx_train):
         features_tr = self.features[idx_train]
         self.clusters = self.clf.fit_predict(features_tr)
+
+    def save_model(self):
         joblib.dump(self.clf, self.model_path)
 
     def classify(self, idx_test):
@@ -372,13 +384,16 @@ class Random_Forest():
         self.features = features
         self.labels = labels
         self.n_estimators = n_estimators
-        self.n_estimators = max_depth
+        self.max_depth = max_depth
         self.clf = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth,random_state=seed)
         self.model_path = 'models/best_model_' + save_path + 'rf.sav'
 
     def load_pretrained(self):
         #Load a pretrained model to test
         self.clf = joblib.load(self.model_path)
+
+    def save_model(self):
+        joblib.dump(self.clf, self.model_path)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]
@@ -421,6 +436,9 @@ class MLP():
     def load_pretrained(self):
         #Load a pretrained model to test
         self.clf = joblib.load(self.model_path)
+
+    def save_model(self):
+        joblib.dump(self.clf, self.model_path)
 
     def train(self, idx_train):
         features_tr = self.features[idx_train]

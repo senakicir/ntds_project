@@ -16,6 +16,7 @@ def cross_validation(model_ori, indx, classes, K=5, name = ""):
 
     errors = np.zeros([K,])
     confusion_matrices = np.zeros([K, len(classes), len(classes)])
+    prev_error = 100
     for k in range(K):
         model = copy.deepcopy(model_ori)
         model.reset()
@@ -25,6 +26,9 @@ def cross_validation(model_ori, indx, classes, K=5, name = ""):
         model.train(idx_tr)
         model.classify(idx_test)
         confusion_matrices[k, :, :], errors[k] = model.accuracy(classes)
+        if errors[k] < prev_error:
+            prev_error = errors[k]
+            model.save_model()
         #print('Iter {0:d} Percentage Error: {1:.2f}'.format(k, errors[k]))
 
     mean_error = np.mean(errors)
