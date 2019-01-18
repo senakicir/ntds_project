@@ -33,6 +33,18 @@ def cross_validation(model_ori, n_data, classes, K=5, name = ""):
     plot_confusion_matrix(overall_confusion_matrix, classes, name)
     return mean_error, std_error
 
+
+def evaluate_transductive(model_ori, idx_train, idx_test, classes, name = ""):
+    model = copy.deepcopy(model_ori)
+
+    model.train(idx_train)
+    model.classify(idx_test)
+    confusion_matrix, error = model.accuracy(classes)
+
+    plot_confusion_matrix(confusion_matrix, classes, name)
+    return error
+
+
 def simple_test(model_ori, n_data, classes, name = ""):
     model = copy.deepcopy(model_ori)
     model.load_pretrained()

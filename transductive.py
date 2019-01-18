@@ -3,6 +3,8 @@ from scipy import sparse
 from abc import ABCMeta, abstractmethod
 
 from error import error_func
+from sklearn.metrics import confusion_matrix
+
 
 class Base():
     __metaclass__ = ABCMeta
@@ -83,9 +85,12 @@ class Base():
         self.labels_test = self.y[x].copy()
         self.prediction = np.argmax(probas,axis=1)
 
-    def accuracy(self):
-        #confusion_matrix(self.labels_test, self.prediction)
-        return error_func(self.labels_test, self.prediction)
+    def accuracy(self, classes):
+        c_m = confusion_matrix(self.labels_test, self.prediction)
+        for i in range(len(classes)):
+            labels_count = np.sum(self.labels_test == i)
+            c_m[i,:] = (c_m[i,:] /labels_count)*100
+        return c_m, error_func(self.labels_test, self.prediction)
 
     def predict_proba(self,x):
         """Predict probability for each possible label
@@ -100,6 +105,7 @@ class Base():
         probabilities : array_like, shape = [n_samples, n_classes]
             Probability distributions across class labels
         """
+
         return (self.F_[x].T / np.sum(self.F_[x], axis=1)).T
 
 
