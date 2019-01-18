@@ -31,8 +31,8 @@ class Net(nn.Module):
 
 class MyDataset(Dataset):
     def __init__(self, data, target, transform=None):
-        self.data = torch.from_numpy(data).float()
-        self.target = torch.from_numpy(target).long()
+        self.data = torch.from_numpy(data.copy()).float()
+        self.target = torch.from_numpy(target.copy()).long()
         self.transform = transform
 
     def __getitem__(self, index):
@@ -122,18 +122,21 @@ class MLP():
             c_m[i,:] = (c_m[i,:] /labels_count)*100
         return c_m, acc_test
 
-    def get_rep(features):
+    def get_rep(self,features):
         self.load_pretrained()
         self.net.eval()
-        dataset = MyDataset(features, np.zeros(features.shape()[0]))
+        dataset = MyDataset(features, np.zeros(features.shape[0]))
         data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                                    batch_size=self.batch_size,
                                                    shuffle=False)
-        new_rep = np.array([])
+        new_rep = None
         for images, labels in data_loader:
             images = images.cuda()
             _, rep = self.net(images)
-            new_rep += rep.cpu().detach().numpy()
+            if new_rep is None:
+                new_rep = rep.cpu().detach().numpy()
+            else:
+                new_rep = np.concatenate([new_rep,rep.cpu().detach().numpy()])
 
         return new_rep
 

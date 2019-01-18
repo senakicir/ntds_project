@@ -8,6 +8,7 @@ from sklearn.manifold import spectral_embedding
 import pdb
 import pygsp as pg
 import os
+from mlp import MLP as MLP_NN
 
 def load(filename):
     if 'features' in filename:
