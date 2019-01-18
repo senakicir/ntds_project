@@ -138,7 +138,7 @@ def save_features_labels_adjacency(use_PCA = True, use_eigenmaps = False, rem_di
     all_features = np.vstack([features_part_test, features_part_train])
     all_labels = np.concatenate([genres_gt_test, genres_gt_train])
     idx_test = np.array(list(range(0,features_part_test.shape[0])))
-    adjacency_big, all_features, all_labels, _,  = form_adjacency(all_features, all_labels, genres_classes, rem_disconnected, threshold = threshold, metric = metric)
+    adjacency_big, _, all_labels, _,  = form_adjacency(all_features, all_labels, genres_classes, rem_disconnected, threshold = threshold, metric = metric)
 
     np.save("dataset_saved_numpy/"+ name + "all_labels.npy", all_labels)
     np.save("dataset_saved_numpy/"+ name + "all_adjacency.npy", adjacency_big)
