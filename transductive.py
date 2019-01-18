@@ -4,8 +4,9 @@ from abc import ABCMeta, abstractmethod
 
 from error import error_func
 from sklearn.metrics import confusion_matrix
-
-
+"""
+Code modified from : https://github.com/junliangma/gbssl
+"""
 class Base():
     __metaclass__ = ABCMeta
     def __init__(self,graph,y,max_iter=30):

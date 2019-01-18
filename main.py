@@ -75,6 +75,7 @@ parser.add_argument('--prefix', type=str, default="None",
 
 def load_parameters_and_data(args):
     stat_dirname = "graph_stats"
+    ## Form prefixes for saved files depending on the arguments passed
     names = form_file_names(args.with_PCA, args.PCA_dim, args.use_eigenmaps, args.remove_disconnected, args.dataset_size, args.threshold,args.use_mlp_features,args.prefix)
 
     if args.recalculate_features or args.only_features:
@@ -84,14 +85,16 @@ def load_parameters_and_data(args):
         else:
             num_classes = args.num_classes
 
+        ## Read the features and labels, divide into training and testing, for adjacency matrix and save them
         output = save_features_labels_adjacency(use_PCA=args.with_PCA, PCA_dim = args.PCA_dim, use_eigenmaps=args.use_eigenmaps, rem_disconnected= args.remove_disconnected, threshold =args.threshold, metric=args.distance_metric,
                                            use_features=['mfcc'], dataset_size=args.dataset_size, genres=args.genres, num_classes=num_classes, return_features=args.recalculate_features,plot_graph=args.plot_graph,train=args.train, use_mlp=args.use_mlp_features,use_cpu=args.use_cpu,prefix=args.prefix)
+
         if args.only_features:
             return
-
         features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = output
     else:
         print("Loading features, labels, and adjacency ...")
+        ## Load previously saved features, labels, and adjacency matrices
         features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_features_labels_adjacency(names, args.train, plot_graph=args.plot_graph)
 
     print("The dataset size is: {}. Genres that will be used: {}".format(features.shape[0], genres))
@@ -99,17 +102,17 @@ def load_parameters_and_data(args):
     return args, names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates
 
 def train_everything(args):
+    ## Get features, labels, training and testing set, adjacency
     args, file_names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_parameters_and_data(args)
+
     if args.inductive_learning:
         print('#### Applying Inductive Learning ####')
 
-        #nhid = 100 gives 82.5, nhid=500 gives 83, nhid = 750 gives 83.5 ---> adjacency
-        #dropout = 0.1, nhid= 750 gives 86.5, dropout=0.3 and nhid=750 gives 87.25   --> adjacency_pca
         if args.additional_models:
+            ## Initialize model with correct parameters
             svm_clf = SVM(features, gt_labels, kernel='linear', seed=SEED, save_path=file_names)
             random_forest_clf = Random_Forest(features, gt_labels, n_estimators=100, max_depth=20,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
-            #mlp_clf = MLP(features, gt_labels, solver='adam', alpha=1e-5, hidden_layers=(10, 8), lr=2e-4, max_iter=10000, save_path=file_names)
 
             start = time.time()
             mean_error_svm, std_error_svm = cross_validation(svm_clf, indx_train, K=5, classes=genres, name=file_names+"svm_")
@@ -129,6 +132,7 @@ def train_everything(args):
         if args.gcn:
             print("Training GCN")
             start = time.time()
+            ## Initialize GCN with correct parameters
             gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
             train_gcn(gnn_clf, indx_train, name=file_names+"gnn_")
             print("GCN time", time.time()-start)
@@ -136,6 +140,7 @@ def train_everything(args):
         if args.gcn_khop:
             print("Training GCN K-Hop")
             start = time.time()
+            ## Initialize GCN K-Hop with correct parameters
             gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency=adjacency, features=features, labels=gt_labels,
                                n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01,
                                weight_decay=5e-4, epochs=300, batch_size=10000, save_path=file_names)
@@ -144,12 +149,14 @@ def train_everything(args):
 
         if args.mlp_nn:
             start = time.time()
+            ## Initialize MLP with correct parameters
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=100,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             mean_error_mlpNN, std_error_mlpNN = cross_validation(mlp_nn, indx_train, K=5,classes=genres, name=file_names+"mlpNN_")
             print('* MLP NN cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_mlpNN, std_error_mlpNN))
             print("MLP time", time.time()-start)
 
 def test_everything(args):
+    ## Get features, labels, training and testing set, adjacency
     args, file_names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_parameters_and_data(args)
 
     if args.graph_statistics:
@@ -162,11 +169,12 @@ def test_everything(args):
             gstats.advanced(adjacency, stat_dirname, active_plots=args.plot_graph)
         else:  # basic setting
             gstats.basic(adjacency)
-        #gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
+        gstats.growth_analysis(adjacency, release_dates, gt_labels, stat_dirname)
 
     if args.inductive_learning:
         print('#### Testing Inductive Learning ####')
         if args.additional_models:
+            ## Initialize models with correct parameters
             svm_clf = SVM(features, gt_labels, kernel='linear',seed=SEED, save_path=file_names)
             random_forest_clf = Random_Forest(features, gt_labels, n_estimators=100, max_depth=20,seed=SEED, save_path=file_names)
             knn_clf = KNN(features, gt_labels, save_path=file_names)
@@ -181,67 +189,60 @@ def test_everything(args):
             print('* KNN simple test error: {:.2f}'.format(error_knn))
 
         if args.gcn:
+            ## Initialize GCN with correct parameters
             gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
             error_gnn = simple_test(gnn_clf, indx_test, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
         if args.gcn_khop:
+            ## Initialize GCN K-Hop with correct parameters
             gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
             error_gnn = simple_test(gnn_clf, indx_test, classes=genres, name=file_names+"gnn_khop_")
             print('* GCN KHop simple test error: {:.2f}'.format(error_gnn))
         if args.mlp_nn:
+            ## Initialize MLP with correct parameters
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=10,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
             error_mlpNN = simple_test(mlp_nn, indx_test, classes=genres, name=file_names+"mlpNN_")
             print('* MLP NN simple test error: {:.2f}'.format(error_mlpNN))
 
 def transductive_learning(args):
     print('#### Applying Transductive Learning ####')
+    ## Get features, labels, training and testing set, adjacency
     args, file_names, stat_dirname, features, gt_labels, genres, adjacency,indx_train,indx_test, pygsp_graph, release_dates = load_parameters_and_data(args)
 
     adjacency = sparse.csr_matrix(adjacency)
 
-    lgc = tr.LGC(graph=adjacency,y=gt_labels,alpha=0.50,max_iter=30)
+    ## Initialize all models
     hmn = tr.HMN(graph=adjacency,y=gt_labels,max_iter=30)
     parw = tr.PARW(graph=adjacency,y=gt_labels,lamb=10,max_iter=30)
-    #mad = tr.MAD(graph=adjacency,y=gt_labels,mu=np.array([1.0,0.5,1.0]),beta=2.0,max_iter=30)
     omni = tr.OMNIProp(graph=adjacency,y=gt_labels,lamb=1.0,max_iter=30)
-    camlp = tr.CAMLP(graph=adjacency,y=gt_labels,beta=0.1,H=None,max_iter=30)
 
     start = time.time()
-    mean_error_lgc = evaluate_transductive(lgc, indx_train, indx_test,  classes=genres, name=file_names+"lgc_")
-    print('* Local and Global Consistency - error mean: {:.2f}'.format(mean_error_lgc))
-    print("lgc time", time.time()-start)
-
-    start = time.time()
+    ## Evaluate HMN
     mean_error_hmn = evaluate_transductive(hmn, indx_train, indx_test,  classes=genres, name=file_names+"hmn_")
     print('* Harmonic Function -  error mean: {:.2f}'.format(mean_error_hmn))
     print("Harmonic time", time.time()-start)
 
     start = time.time()
+    ## Evaluate PARW
     mean_error_parw = evaluate_transductive(parw, indx_train, indx_test,  classes=genres, name=file_names+"parw_")
     print('* Partially Absorbing Random Walk -  error mean: {:.2f}'.format(mean_error_parw))
     print("Partially Absorbing Random Walk time", time.time()-start)
 
-    #start = time.time()
-    #mean_error_mad, = evaluate_transductive(mad, indx_train, indx_test,  classes=genres, name=file_names+"mad_")
-    #print('* Modified Adsorption -  error mean: {:.2f}'.format(mean_error_mad))
-
     start = time.time()
+    ## Evaluate OMNI-PROP
     mean_error_omni = evaluate_transductive(omni, indx_train, indx_test,  classes=genres, name=file_names+"omni_")
     print('* OMNI-Prop -  error mean: {:.2f}'.format(mean_error_omni))
     print("OMNI-Prop time", time.time()-start)
 
-    start = time.time()
-    mean_error_camlp = evaluate_transductive(camlp, indx_train, indx_test,  classes=genres, name=file_names+"camlp_")
-    print('* Confidence-Aware Modulated Label Propagation - error: {:.2f}'.format(mean_error_camlp))
-    print(" Confidence-Aware Modulated Label Propagation time", time.time()-start)
-
 if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
-
-    if args.transductive_learning:
-        transductive_learning(args)
+    if args.only_features:
+        load_parameters_and_data(args)
     else:
-        if args.train:
-            train_everything(args)
+        if args.transductive_learning:
+            transductive_learning(args)
         else:
-            test_everything(args)
+            if args.train:
+                train_everything(args)
+            else:
+                test_everything(args)

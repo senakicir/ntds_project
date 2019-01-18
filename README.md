@@ -1,14 +1,8 @@
-## Genre Classification for playlist recommendation
+## Genre Classification
 A little info about your project and/ or overview that explains **what** the project is about.
 
 ## Motivation
 A short description of the motivation behind the creation and maintenance of the project. This should explain **why** the project exists.
-
-## Screenshots
-Include logo/demo screenshot etc.
-
-## Features
-What makes your project stand out?
 
 ## Main Dependencies
 - Python3.7
@@ -47,7 +41,7 @@ The different arguments that can be passed to `main.py`:
 - `--additional-models`: Run SVM, RF, KNN
 - `--remove-disconnected`: Removes disconnected nodes (Default: False)
 - `--train`: Train the chosen models (Default: False)
-- `--prefix`: Add prefix to file names (Default: "")
+- `--prefix`: Add prefix to file names (Default: "None")
 - `--PCA-dim`: PCA dimensions (Default: 10)
 - `--use-cpu`: Use CPU instead of cuda (Default: False)
 
@@ -63,9 +57,14 @@ To run genre classification only by loading previously saved features:
 python main.py --threshold 0.9  --dataset-size medium --inductive-learning --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120 --additional-models --train
 ```
 
-To calculate and save the features and then continue classification:
+To calculate and save the features and then train classifiers:
 ```
 python main.py --threshold 0.9  --dataset-size medium --inductive-learning --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120 --additional-models --train --recalculate-features --gcn --gcn_khop
+```
+
+To test trained classifiers using test set:
+```
+python main.py --threshold 0.9  --dataset-size medium --inductive-learning --remove-disconnected --num-classes 8 --with-PCA --PCA-dim 120 --additional-models --gcn --gcn_khop
 ```
 
 ### Using MLP Features to get better features and adjacency
@@ -85,7 +84,7 @@ Second, get new features by passing them through trained MLP and train the class
 python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --train --recalculate-features --gcn --gcn_khop
 ```
 
-Test the trained methods:
+Test the trained methods using test set:
 ```
 python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --gcn --gcn_khop
 ```
@@ -96,15 +95,11 @@ This type of learning contains 'Graph-Based Semi-Supervised Learning' algorithms
 ### Algorithms
 
 * Harmonic Function (HMN) [ICML03][[paper](http://mlg.eng.cam.ac.uk/zoubin/papers/zgl.pdf)]
-* Local and Global Consistency (LGC) [NIPS04][[paper](https://papers.nips.cc/paper/2506-learning-with-local-and-global-consistency.pdf)]
-* Modified Adsorption (MAD) [PKDD09][[paper](http://talukdar.net/papers/adsorption_ecml09.pdf)]
+<!--* Local and Global Consistency (LGC) [NIPS04][[paper](https://papers.nips.cc/paper/2506-learning-with-local-and-global-consistency.pdf)]
+* Modified Adsorption (MAD) [PKDD09][[paper](http://talukdar.net/papers/adsorption_ecml09.pdf)]-->
 * Partially Absorbing Random Walk (PARW) [NIPS12][[paper](https://papers.nips.cc/paper/4833-learning-with-partially-absorbing-random-walks.pdf)]
 * OMNI-Prop (OMNIProp) [AAAI15][[paper](https://pdfs.semanticscholar.org/f217/1ea6e028fb5c2eb1d0256639b4e732764ab4.pdf)]
-* Confidence-Aware Modulated Label Propagation (CAMLP) [SDM16][[paper](https://epubs.siam.org/doi/pdf/10.1137/1.9781611974348.58)]
-
-## Credits
-Reference papers used
-
+<!--* Confidence-Aware Modulated Label Propagation (CAMLP) [SDM16][[paper](https://epubs.siam.org/doi/pdf/10.1137/1.9781611974348.58)]-->
 
 ## License
 Please, see the [license](LICENSE) for further details.
