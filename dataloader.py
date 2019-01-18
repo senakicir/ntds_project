@@ -147,7 +147,7 @@ def save_features_labels_adjacency(use_PCA = True, PCA_dim = 10, use_eigenmaps =
         mlp_name = form_file_names(use_PCA,PCA_dim, use_eigenmaps, rem_disconnected, dataset_size, threshold,not use_mlp,prefix)
         mlp_nn = MLP_NN(hidden_size=100, features=feature_values, labels=genres_gt,num_epoch=10,batch_size=100,num_classes=len(genres_classes), save_path=mlp_name,cuda=use_cpu)
         feature_values = mlp_nn.get_rep(feature_values)
-    adjacency, features, genres_gt, _,indx_train,indx_test  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected, indx_train=indx_train, indx_test=indx_test, threshold = threshold, metric = metric)
+    adjacency, feature_values, genres_gt, _,indx_train,indx_test  = form_adjacency(feature_values, genres_gt, genres_classes, rem_disconnected, indx_train=indx_train, indx_test=indx_test, threshold = threshold, metric = metric)
     if (use_eigenmaps):
         feature_values = spectral_embedding(adjacency,n_components=10, eigen_solver=None,random_state=SEED, eigen_tol=0.0,norm_laplacian=True)
 
