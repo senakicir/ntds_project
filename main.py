@@ -172,7 +172,7 @@ def test_everything(args):
             #print('* MLP cross validation error: {:.2f}'.format(error_mlp))
 
         if args.gcn:
-            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=2000, save_path=file_names)
+            gnn_clf = GCN(nhid=[100, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
             error_gnn = simple_test(gnn_clf, n_data, classes=genres, name=file_names+"gnn_")
             print('* GCN simple test error: {:.2f}'.format(error_gnn))
         if args.mlp_nn:
