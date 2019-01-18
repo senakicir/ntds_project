@@ -134,17 +134,15 @@ def train_everything(args):
             print("Training GCN")
             start = time.time()
             gnn_clf = GCN(nhid=[1200, 100], dropout=0.1, adjacency= adjacency, features=features, labels=gt_labels, n_class=len(genres), cuda=args.use_cpu, regularization=None, lr=0.01, weight_decay = 5e-4, epochs = 300, batch_size=10000, save_path=file_names)
-            train_gcn(gnn_clf, indx_train,classes=len(genres), name=file_names+"gnn_")
+            train_gcn(gnn_clf, indx_train, name=file_names+"gnn_")
             print("GCN time", time.time()-start)
 
         if args.gcn_khop:
-            print("Training GCN")
+            print("Training GCN K-Hop")
             gnn_clf = GCN_KHop(nhid=[1200, 100], dropout=0.1, adjacency=adjacency, features=features, labels=gt_labels,
                                n_class=len(genres), khop=2, cuda=args.use_cpu, regularization=None, lr=0.01,
                                weight_decay=5e-4, epochs=300, batch_size=10000, save_path=file_names)
-            mean_error_gnn, std_error_gnn = cross_validation(gnn_clf, indx_train, K=5, classes=genres,
-                                                             name=file_names + "gnn_khop_")
-            print('* GCN KHop cross validation error mean: {:.2f}, std: {:.2f}'.format(mean_error_gnn, std_error_gnn))
+            train_gcn(gnn_clf, indx_train, name=file_names + "gnn_khop_")
 
         if args.mlp_nn:
             mlp_nn = MLP_NN(hidden_size=100, features=features, labels=gt_labels,num_epoch=100,batch_size=100,num_classes=len(genres), save_path=file_names,cuda=args.use_cpu)
