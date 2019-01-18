@@ -23,8 +23,8 @@ def remove_disconnected_nodes(adjacency, features, labels,indx_train, indx_test)
     connected_nodes_ind = (np.sum(adjacency, axis=0) != 0)
     new_adj = adjacency[connected_nodes_ind, :][:, connected_nodes_ind]
     new_feat = features[connected_nodes_ind, :]
-    labels = labels[connected_nodes_ind]
     temp = np.array([0]*len(labels))
+    labels = labels[connected_nodes_ind]
     temp[indx_train] = 1
     temp[indx_test] = -1
     temp = temp[connected_nodes_ind]
