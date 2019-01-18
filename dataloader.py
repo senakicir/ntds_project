@@ -197,8 +197,8 @@ def load_transductive_data(name):
     labels = np.load("dataset_saved_numpy/"+ name + "all_labels.npy")
     adjacency = np.load("dataset_saved_numpy/"+ name + "all_adjacency.npy")
     n_data = adjacency.shape[0]
-    idx_test = np.array(list(range(n_data//5)))
-    idx_tr = np.array(list(range(n_data//5, n_data)))
+    idx_test = np.array(list(range(0,n_data//10)))
+    idx_tr = np.array(list(range(n_data//10, n_data)))
     return labels, adjacency, idx_test, idx_tr
 
 def load_features_labels_adjacency(name, train, plot_graph=False):

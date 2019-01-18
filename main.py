@@ -183,7 +183,7 @@ def test_everything(args):
 def transductive_learning(args):
     print('#### Applying Transductive Learning ####')
     _, _, name, _, _, _, genres, _, _, _ = load_parameters_and_data(args) #to save
-    labels, adjacency, idx_tr, idx_test = load_transductive_data(name)
+    labels, adjacency, idx_test, idx_tr = load_transductive_data(name)
     
     adjacency = sparse.csr_matrix(adjacency)
 
