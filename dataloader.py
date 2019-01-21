@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import ast
 from scipy.spatial.distance import pdist, squareform
-from utils import remove_disconnected_nodes, generate_PCA_features, normalize_feat, uniform_random_subsample, form_file_names, SEED
+from utils import remove_disconnected_nodes, generate_PCA_features, normalize_feat, form_file_names, SEED
 from visualization import plot_gt_labels
 from sklearn.manifold import spectral_embedding
 import pdb
