@@ -85,12 +85,12 @@ python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-
 
 Second, get new features by passing them through trained MLP and train the classification using them
 ```
-python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --train --recalculate-features --additional-models --gcn --gcn_khop
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --use-mlp-features --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --train --recalculate-features --additional-models --gcn --gcn_khop
 ```
 
 Test the trained methods using test set:
 ```
-python main.py --threshold 0.9  --dataset-size large --inductive-learning --mlp-nn --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --additional-models --gcn --gcn_khop
+python main.py --threshold 0.9  --dataset-size large --inductive-learning --use-mlp-features --remove-disconnected --num-classes 8 --prefix mlpFeatures --with-PCA --PCA-dim 120 --additional-models --gcn --gcn_khop
 ```
 
 ## Transductive Learning Methods
